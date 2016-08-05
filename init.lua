@@ -35,7 +35,7 @@ banners.colors = {
     "brown", "darkbrown"
 }
 
-banners.base_transform = ({texture = "bg_black.png", mask="mask_background.png"})
+banners.base_transform = ({texture = "bg_white.png", mask="mask_background.png"})
 
 banners.creation_form = smartfs.create("banners:banner_creation",
         function(state)
@@ -47,7 +47,8 @@ banners.creation_form = smartfs.create("banners:banner_creation",
                 player:set_wielded_item(newbanner)
             end
             state.update_preview = function(self)
-                self:get("banner_preview"):setImage(state.banner:get_transform_string())
+                self:get("banner_preview"):setImage(self.banner:get_transform_string())
+                self:get("color_indicator"):setImage(self.current_color)
             end
             state.update_all = function(self)
                 self:update_preview()
@@ -56,9 +57,12 @@ banners.creation_form = smartfs.create("banners:banner_creation",
             -- initialize with empty banner
             state.banner = banners.Banner:new(nil)
             state.banner:push_transform(banners.base_transform)
-            state.current_color = "bg_black.png"
+            state.current_color = "bg_white.png"
             state:size(20,10)
-            state:image(3, 0.4, 4, 2, "banner_preview", state.banner:get_transform_string())
+            state:image(3, 0.4, 4, 2, "banner_preview", nil)
+            state:image(2.4, 0.8, 0.7, 0.7, "color_indicator", state.current_color)
+            state:update_all()
+            -- color indicator
             -- undo button
             state:button(0.5, 0.3, 2, 1, "undo", "Undo"):click(function(self, state)
                     if #state.banner.transforms > 1 then
@@ -79,6 +83,7 @@ banners.creation_form = smartfs.create("banners:banner_creation",
                 b:setImage("bg_"..banners.colors[i]..".png")
                 b:click(function(self, state)
                             state.current_color = "bg_"..self.name..".png"
+                            state:update_preview()
                             -- todo: update masks or something
                         end
                     )
