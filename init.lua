@@ -39,6 +39,20 @@ banners.base_transform = ({texture = "bg_black.png", mask="mask_background.png"}
 
 banners.creation_form = smartfs.create("banners:banner_creation",
         function(state)
+            -- helper functions
+            state.update_player_inv = function(self)
+                local player = minetest.get_player_by_name(self.player)
+                local newbanner = player:get_wielded_item()
+                newbanner:set_metadata(state.banner:get_transform_string())
+                player:set_wielded_item(newbanner)
+            end
+            state.update_preview = function(self)
+                self:get("banner_preview"):setImage(state.banner:get_transform_string())
+            end
+            state.update_all = function(self)
+                self:update_preview()
+                self:update_player_inv()
+            end
             -- initialize with empty banner
             state.banner = banners.Banner:new(nil)
             state.banner:push_transform(banners.base_transform)
@@ -49,21 +63,13 @@ banners.creation_form = smartfs.create("banners:banner_creation",
             state:button(0.5, 0.3, 2, 1, "undo", "Undo"):click(function(self, state)
                     if #state.banner.transforms > 1 then
                         state.banner:pop_transform()
-                        state:get("banner_preview"):setImage(state.banner:get_transform_string())
+                        state:update_all()
                     end
                 end)
             -- delete button
             state:button(0.5, 1.3, 2, 1, "delete", "Delete"):click(function(self, state)
                     state.banner.transforms = {banners.base_transform}
-                    state:get("banner_preview"):setImage(state.banner:get_transform_string())
-                end)
-            -- save button
-            state:button(9, 9, 2, 1, "done", "Done"):click(function(self, state)
-                    local player = minetest.get_player_by_name(state.player)
-                    local newbanner = player:get_wielded_item()
-                    newbanner:set_metadata(state.banner:get_transform_string())
-                    player:set_wielded_item(newbanner)
-                    state:close()
+                    state:update_all()
                 end)
             -- add banners colors
             local x = 7
@@ -90,7 +96,7 @@ banners.creation_form = smartfs.create("banners:banner_creation",
                 b:setImage(banners.masks[i]..".png")
                 b:click(function(self, state)
                             state.banner:push_transform({texture=state.current_color, mask=self.name..".png"})
-                            state:get("banner_preview"):setImage(state.banner:get_transform_string())
+                            state:update_all()
                         end
                 )
                 x = x + 2
