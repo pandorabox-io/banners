@@ -151,6 +151,39 @@ determine_flag_direction = function(pos, pointed_thing)
     return minetest.dir_to_wallmounted(dir)
 end
 
+local banner_on_use
+local banner_on_dig
+local banner_on_destruct
+local banner_after_place
+banner_on_use = function(itemstack, player, pointed_thing)
+    if player.is_player then
+        banners.creation_form:show(player:get_player_name())
+    end
+end
+
+banner_on_dig = function(pos, node, player)
+    local meta = minetest.get_meta(pos)
+    local inventory = player:get_inventory()
+    inventory:add_item("main", {name=node.name, count=1, wear=0, metadata=meta:get_string("banner")})
+    minetest.remove_node(pos)
+end
+
+banner_on_destruct = function(pos, node, player)
+    local objects = minetest.get_objects_inside_radius(pos, 0.5)
+    for _,v in ipairs(objects) do
+        local e = v:get_luaentity()
+        if e and e.name == "banners:banner_ent" then
+            v:remove()
+        end
+    end
+end
+
+banner_after_place = function (pos, player, itemstack, pointed_thing)
+    minetest.get_node(pos).param2 = determine_flag_direction(pos, pointed_thing)
+    minetest.get_meta(pos):set_string("banner", itemstack:get_metadata())
+    minetest.add_entity(pos, "banners:banner_ent")
+end
+
 -- da wooden banner
 minetest.register_node("banners:wooden_banner",
     {
@@ -164,29 +197,16 @@ minetest.register_node("banners:wooden_banner",
         paramtype="light",
         paramtype2="facedir",
         after_place_node = function (pos, player, itemstack, pointed_thing)
-            minetest.get_node(pos).param2 = determine_flag_direction(pos, pointed_thing)
-            minetest.get_meta(pos):set_string("banner", itemstack:get_metadata())
-            minetest.add_entity(pos, "banners:banner_ent")
-        end,
+            banner_after_place(pos, player, itemstack, pointed_thing)
+          end,
         on_destruct = function(pos)
-            local objects = minetest.get_objects_inside_radius(pos, 0.5)
-            for _,v in ipairs(objects) do
-                local e = v:get_luaentity()
-                if e and e.name == "banners:banner_ent" then
-                    v:remove()
-                end
-            end
+            banner_on_destruct(pos)
         end,
-        on_use = function(itemstack, player, pointed_thing)
-            if player.is_player then
-                banners.creation_form:show(player:get_player_name())
-            end
+        on_use = function(i, p, pt)
+            banner_on_use(i, p, pt)
         end,
-        on_dig = function(pos, node, player)
-            local meta = minetest.get_meta(pos)
-            local inventory = player:get_inventory()
-            inventory:add_item("main", {name=node.name, count=1, wear=0, metadata=meta:get_string("banner")})
-            minetest.remove_node(pos)
+        on_dig = function(pos, n, p) 
+            banner_on_dig(pos, n, p)
         end
     }
 )
