@@ -1,0 +1,128 @@
+banners.power_per_banner = 10.
+
+-- items
+minetest.register_craftitem("banners:golden_finial", {
+    groups = {},
+    description = "Golden finial",
+    inventory_image = "gold_finial.png",
+})
+
+minetest.register_craftitem("banners:silver_pole", {
+    groups = {},
+    description = "Silver pole",
+    inventory_image = "silver_pole.png"
+})
+
+minetest.register_craftitem("banners:power_pole", {
+    groups = {},
+    description = "Power pole",
+    inventory_image = "power_pole.png"
+})
+
+minetest.register_craftitem("banners:golden_sheet", {
+    groups = {},
+    description = "Golden sheet",
+    inventory_image = "golden_sheet.png"
+})
+
+minetest.register_craftitem("banners:death_pole", {
+    groups = {},
+    description = "Death pole",
+    inventory_image = "death_pole.png"
+})
+
+minetest.register_craftitem("banners:death_sheet", {
+    groups = {},
+    description = "Death sheet",
+    inventory_image = "death_sheet.png"
+})
+
+
+-- crafts
+
+minetest.register_craft( -- silver flag pole
+    {
+        output = "banners:silver_pole 1",
+        recipe = {
+            {"", "", "moreores:silver_ingot"},
+            {"", "moreores:silver_ingot", ""},
+            {"moreores:silver_ingot", "", ""}
+        }
+    }
+)
+
+minetest.register_craft( -- power flag pole
+    {
+        output = "banners:power_pole 1",
+        recipe = {
+            {"", "", ""},
+            {"", "banners:golden_finial", ""},
+            {"moreores:silver_ingot", "", ""}
+        }
+    }
+)
+
+minetest.register_craft( -- golden banner
+    {
+        output = "banners:golden_banner 1",
+        type = "shapeless",
+        recipe = { "default:gold_ingot", "banners:banner_sheet"}
+    }
+)
+
+minetest.register_craft( -- power banner
+    {
+        output = "banners:power_banner",
+        recipe = {
+            {"", "banners:golden_banner", ""},
+            {"", "banners:power_pole", ""},
+            {"", "banners:steel_support", ""}
+        }
+    }
+)
+
+-- nodes
+minetest.register_node("banners:power_banner", {
+    drawtype = "mesh",
+    mesh = "banner_support.x",
+    tiles = {"gold_support.png"},
+    description = "Power Banner",
+    groups = {cracky=3},
+    diggable = true,
+    stack_max = 1,
+    paramtype = "light",
+    paramtype2 = "facedir",
+    after_place_node = function (pos, player, itemstack, pointed_thing)
+        banners.after_powerbanner_placed(pos, player, itemstack, pointed_thing)
+      end,
+    on_destruct = function(pos)
+        banners.banner_on_destruct(pos)
+    end,
+    on_dig = function(pos, n, p) 
+        local meta = minetest.get_meta(pos)
+        local facname = meta:get_string("faction")
+        if facname then
+            local faction = factions.factions[facname]
+            if faction then
+                faction:decrease_power(banners.power_per_banner)
+            end
+        end
+        banners.banner_on_dig(pos, n, p)
+    end
+})
+
+banners.after_powerbanner_placed = function(pos, player, itemstack, pointed_thing)
+    minetest.get_node(pos).param2 = banners.determine_flag_direction(pos, pointed_thing)
+    local faction = factions.players[player:get_player_name()]
+    if not faction then
+        minetest.get_meta(pos):set_string("banner", "bg_white.png")
+    else
+        local banner_string = factions.factions[faction].banner
+        minetest.get_meta(pos):set_string("banner", banner_string)
+        minetest.get_meta(pos):set_string("faction", faction)
+        factions.factions[faction]:increase_power(banners.power_per_banner)
+    end
+    minetest.add_entity(pos, "banners:banner_ent")
+end
+
+
