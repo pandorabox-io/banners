@@ -141,8 +141,7 @@ function banners.Banner.get_transform_string(self)
 end
 
 -- helper function for determining the flag's direction
-local determine_flag_direction
-determine_flag_direction = function(pos, pointed_thing)
+banners.determine_flag_direction = function(pos, pointed_thing)
     local above = pointed_thing.above
     local under = pointed_thing.under
     local dir = {x = under.x - above.x,
@@ -151,24 +150,20 @@ determine_flag_direction = function(pos, pointed_thing)
     return minetest.dir_to_wallmounted(dir)
 end
 
-local banner_on_use
-local banner_on_dig
-local banner_on_destruct
-local banner_after_place
-banner_on_use = function(itemstack, player, pointed_thing)
+banners.banner_on_use = function(itemstack, player, pointed_thing)
     if player.is_player then
         banners.creation_form:show(player:get_player_name())
     end
 end
 
-banner_on_dig = function(pos, node, player)
+banners.banner_on_dig = function(pos, node, player)
     local meta = minetest.get_meta(pos)
     local inventory = player:get_inventory()
     inventory:add_item("main", {name=node.name, count=1, wear=0, metadata=meta:get_string("banner")})
     minetest.remove_node(pos)
 end
 
-banner_on_destruct = function(pos, node, player)
+banners.banner_on_destruct = function(pos, node, player)
     local objects = minetest.get_objects_inside_radius(pos, 0.5)
     for _,v in ipairs(objects) do
         local e = v:get_luaentity()
@@ -178,8 +173,8 @@ banner_on_destruct = function(pos, node, player)
     end
 end
 
-banner_after_place = function (pos, player, itemstack, pointed_thing)
-    minetest.get_node(pos).param2 = determine_flag_direction(pos, pointed_thing)
+banners.banner_after_place = function (pos, player, itemstack, pointed_thing)
+    minetest.get_node(pos).param2 = banners.determine_flag_direction(pos, pointed_thing)
     minetest.get_meta(pos):set_string("banner", itemstack:get_metadata())
     minetest.add_entity(pos, "banners:banner_ent")
 end
@@ -197,20 +192,47 @@ minetest.register_node("banners:wooden_banner",
         paramtype="light",
         paramtype2="facedir",
         after_place_node = function (pos, player, itemstack, pointed_thing)
-            banner_after_place(pos, player, itemstack, pointed_thing)
+            banners.banner_after_place(pos, player, itemstack, pointed_thing)
           end,
         on_destruct = function(pos)
-            banner_on_destruct(pos)
+            banners.banner_on_destruct(pos)
         end,
         on_use = function(i, p, pt)
-            banner_on_use(i, p, pt)
+            banners.banner_on_use(i, p, pt)
         end,
         on_dig = function(pos, n, p) 
-            banner_on_dig(pos, n, p)
+            banners.banner_on_dig(pos, n, p)
         end
     }
 )
 
+-- steel banner
+minetest.register_node("banners:steel_banner",
+    {
+        drawtype = "mesh",
+        mesh = "banner_support.x",
+        tiles = {"steel_support.png"},
+        description = "Steel banner",
+        groups = {cracky=2},
+        diggable = true,
+        stack_max = 1,
+        paramtype = "light",
+        paramtype2 = "facedir",
+        after_place_node = function (pos, player, itemstack, pointed_thing)
+            banners.banner_after_place(pos, player, itemstack, pointed_thing)
+          end,
+        on_destruct = function(pos)
+            banners.banner_on_destruct(pos)
+        end,
+        on_use = function(i, p, pt)
+            banners.banner_on_use(i, p, pt)
+        end,
+        on_dig = function(pos, n, p) 
+            banners.banner_on_dig(pos, n, p)
+        end
+
+    }
+)
 
 -- banner entity
 local set_banner_texture
@@ -218,9 +240,8 @@ set_banner_texture = function (obj, texture)
     obj:set_properties({textures={"banner_uv_text.png^"..texture}})
 end
 
-local banner_on_activate
 
-local banner_on_activate = function(self)
+banners.banner_on_activate = function(self)
     local pos = self.object:getpos()
     local banner = minetest.get_meta(pos):get_string("banner")
     local banner_face = minetest.get_node(pos).param2
@@ -246,7 +267,7 @@ minetest.register_entity("banners:banner_ent",
         visual = "mesh",
         textures = {"banner_uv_text"},
         mesh = "banner_pole.x",
-        on_activate = banner_on_activate,
+        on_activate = banners.banner_on_activate,
     }
 )
 
@@ -274,8 +295,24 @@ minetest.register_craftitem("banners:wooden_pole",
 minetest.register_craftitem("banners:wooden_base",
     {
         groups = {},
-        description = "Wooden Base",
+        description = "Wooden base",
         inventory_image = "wooden_base.png"
+    }
+)
+
+minetest.register_craftitem("banners:steel_pole",
+    {
+        groups = {},
+        description = "Steel pole",
+        inventory_image = "steel_pole.png"
+    }
+)
+
+minetest.register_craftitem("banners:steel_base",
+    {
+        groups = {},
+        description = "Steel base",
+        inventory_image = "steel_base.png"
     }
 )
 
@@ -291,6 +328,17 @@ minetest.register_craft( -- wooden flag pole
     }
 )
 
+minetest.register_craft( -- steel flag pole
+    {
+        output = "banners:steel_pole 1",
+        recipe = {
+            {"", "", "default:steel_ingot"},
+            {"", "default:steel_ingot", ""},
+            {"default:steel_ingot", "", ""}
+        }
+    }
+)
+
 minetest.register_craft( -- wooden flag support base
     {
         output = "banners:wooden_base 1",
@@ -298,6 +346,17 @@ minetest.register_craft( -- wooden flag support base
             {"", "default:stick", ""},
             {"default:stick", "", "default:stick"},
             {"default:wood", "default:wood", "default:wood"}
+        }
+    }
+)
+
+minetest.register_craft( -- steel support
+    {
+        output = "banners:steel_support",
+        recipe = {
+            {"", "default:steel_ingot", ""},
+            {"default:steel_ingot", "", "default:steel_ingot"},
+            {"", "default:steel_block", ""}
         }
     }
 )
@@ -313,7 +372,7 @@ minetest.register_craft( -- banner sheet
     }
 )
 
-minetest.register_craft( -- banner support
+minetest.register_craft( -- wooden support
     {
         output = "banners:wooden_banner 1",
         recipe = {
@@ -323,4 +382,19 @@ minetest.register_craft( -- banner support
         }
     }
 )
+
+minetest.register_craft( -- steel support
+    {
+        output = "banner:steel_banner 1",
+        recipe = {
+            {"", "banners:banner_sheet", ""},
+            {"", "banners:steel_pole", ""},
+            {"", "banners:steel_base", ""}
+        }
+    }
+)
+
+if minetest.get_modpath("factions") then
+    dofile(minetest.get_modpath("banners").."/factions.lua")
+end
 
