@@ -345,7 +345,7 @@ minetest.register_craft( -- wooden flag support base
         recipe = {
             {"", "default:stick", ""},
             {"default:stick", "", "default:stick"},
-            {"default:wood", "default:wood", "default:wood"}
+            {"group:wood", "group:wood", "group:wood"}
         }
     }
 )
