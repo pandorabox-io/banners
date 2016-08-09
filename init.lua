@@ -356,7 +356,7 @@ minetest.register_craft( -- steel support
         recipe = {
             {"", "default:steel_ingot", ""},
             {"default:steel_ingot", "", "default:steel_ingot"},
-            {"", "default:steel_block", ""}
+            {"", "default:steelblock", ""}
         }
     }
 )
