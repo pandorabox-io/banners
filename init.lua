@@ -158,8 +158,10 @@ end
 
 banners.banner_on_dig = function(pos, node, player)
     local meta = minetest.get_meta(pos)
-    local inventory = player:get_inventory()
-    inventory:add_item("main", {name=node.name, count=1, wear=0, metadata=meta:get_string("banner")})
+    if player then 
+        local inventory = player:get_inventory()
+        inventory:add_item("main", {name=node.name, count=1, wear=0, metadata=meta:get_string("banner")})
+    end
     minetest.remove_node(pos)
 end
 
