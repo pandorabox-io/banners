@@ -352,7 +352,7 @@ minetest.register_craft( -- wooden flag support base
 
 minetest.register_craft( -- steel support
     {
-        output = "banners:steel_support",
+        output = "banners:steel_base",
         recipe = {
             {"", "default:steel_ingot", ""},
             {"default:steel_ingot", "", "default:steel_ingot"},
