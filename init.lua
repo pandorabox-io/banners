@@ -387,7 +387,7 @@ minetest.register_craft( -- wooden support
 
 minetest.register_craft( -- steel support
     {
-        output = "banner:steel_banner 1",
+        output = "banners:steel_banner 1",
         recipe = {
             {"", "banners:banner_sheet", ""},
             {"", "banners:steel_pole", ""},
