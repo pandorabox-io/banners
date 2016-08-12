@@ -1,0 +1,21 @@
+{
+    "name": "banners",
+    "description": "Adds customisable banners.",
+    "keywords": [
+        "building",
+        "cosmetic",
+		"customize",
+        "customisable banners",
+        "flag"
+    ],
+    "project": "https://github.com/shamoanjac/banners-mod",
+    "forum": "https://forum.minetest.net/viewtopic.php?f=9&t=15305",
+    "screenshots": [
+        "https://forum.minetest.net/download/file.php?mode=view&id=7199",
+		"https://forum.minetest.net/download/file.php?mode=view&id=7202",
+		"https://forum.minetest.net/download/file.php?mode=view&id=7203"
+    ],
+    "authors": [
+        "DoctorFool"
+    ]
+}
