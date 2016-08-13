@@ -51,13 +51,25 @@ minetest.register_craft( -- silver flag pole
     }
 )
 
+
+minetest.register_craft( -- golden filial
+    {
+        output = "banners:golden_filial",
+        recipe = {
+            {"", "default:gold_ingot", "default:gold_ingot"},
+            {"", "default:gold_ingot", "default:gold_ingot"},
+            {"default:gold_ingot", "", ""}
+        }
+    }
+)
+
 minetest.register_craft( -- power flag pole
     {
         output = "banners:power_pole 1",
         recipe = {
             {"", "", ""},
             {"", "banners:golden_finial", ""},
-            {"moreores:silver_ingot", "", ""}
+            {"banners:silver_pole", "", ""}
         }
     }
 )
