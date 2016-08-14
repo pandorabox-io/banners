@@ -74,9 +74,9 @@ minetest.register_craft( -- power flag pole
     }
 )
 
-minetest.register_craft( -- golden banner
+minetest.register_craft( -- golden sheet
     {
-        output = "banners:golden_banner 1",
+        output = "banners:golden_sheet 1",
         type = "shapeless",
         recipe = { "default:gold_ingot", "banners:banner_sheet"}
     }
@@ -88,7 +88,7 @@ minetest.register_craft( -- power banner
         recipe = {
             {"", "banners:golden_banner", ""},
             {"", "banners:power_pole", ""},
-            {"", "banners:steel_support", ""}
+            {"", "banners:steel_base", ""}
         }
     }
 )
