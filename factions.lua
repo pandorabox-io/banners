@@ -86,7 +86,7 @@ minetest.register_craft( -- power banner
     {
         output = "banners:power_banner",
         recipe = {
-            {"", "banners:golden_banner", ""},
+            {"", "banners:golden_sheet", ""},
             {"", "banners:power_pole", ""},
             {"", "banners:steel_base", ""}
         }
