@@ -52,9 +52,9 @@ minetest.register_craft( -- silver flag pole
 )
 
 
-minetest.register_craft( -- golden filial
+minetest.register_craft( -- golden finial
     {
-        output = "banners:golden_filial",
+        output = "banners:golden_finial",
         recipe = {
             {"", "default:gold_ingot", "default:gold_ingot"},
             {"", "default:gold_ingot", "default:gold_ingot"},
