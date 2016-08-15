@@ -110,7 +110,10 @@ minetest.register_node("banners:power_banner", {
     on_destruct = function(pos)
         banners.banner_on_destruct(pos)
     end,
-    on_dig = function(pos, n, p) 
+    on_dig = function(pos, n, p)
+        if minetest.is_protected(pos, p) then
+            return
+        end
         local meta = minetest.get_meta(pos)
         local facname = meta:get_string("faction")
         if facname then
@@ -120,7 +123,7 @@ minetest.register_node("banners:power_banner", {
             end
         end
         banners.banner_on_dig(pos, n, p)
-    end
+    end,
 })
 
 banners.after_powerbanner_placed = function(pos, player, itemstack, pointed_thing)
