@@ -116,7 +116,7 @@ minetest.register_node("banners:power_banner", {
         if facname then
             local faction = factions.factions[facname]
             if faction then
-                faction:decrease_power(banners.power_per_banner)
+                faction:decrease_maxpower(banners.power_per_banner)
             end
         end
         banners.banner_on_dig(pos, n, p)
@@ -132,7 +132,7 @@ banners.after_powerbanner_placed = function(pos, player, itemstack, pointed_thin
         local banner_string = factions.factions[faction].banner
         minetest.get_meta(pos):set_string("banner", banner_string)
         minetest.get_meta(pos):set_string("faction", faction)
-        factions.factions[faction]:increase_power(banners.power_per_banner)
+        factions.factions[faction]:increase_maxpower(banners.power_per_banner)
     end
     minetest.add_entity(pos, "banners:banner_ent")
 end
