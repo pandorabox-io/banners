@@ -199,7 +199,7 @@ minetest.register_node("banners:death_banner", {
         if defending_facname then
             local faction = factions.factions[defending_facname]
             if faction then
-                faction:stop_attack(chunkpos)
+                faction:stop_attack(parcelpos)
             end
         end
         banners.banner_on_dig(pos, n, p)
@@ -227,7 +227,7 @@ banners.after_deathbanner_placed = function(pos, player, itemstack, pointed_thin
         local parcelpos = factions.get_parcel_pos(pos)
         attacking_faction = factions.factions[attacking_faction]
         attacking_faction:attack_parcel(parcelpos)
-        minetest.get_meta(pos):set_string("faction", faction)
+        minetest.get_meta(pos):set_string("faction", attacking_faction.name)
     end
     minetest.get_meta(pos):set_string("banner", "death_uv.png")
     minetest.add_entity(pos, "banners:banner_ent")
