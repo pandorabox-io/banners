@@ -202,7 +202,7 @@ minetest.register_node("banners:death_banner", {
                 faction:stop_attack(parcelpos)
             end
         end
-        banners.banner_on_dig(pos, n, p)
+        minetest.remove_node(pos)
     end,
 })
 
