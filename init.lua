@@ -35,84 +35,86 @@ banners.colors = {
     "brown", "darkbrown"
 }
 
-banners.base_transform = ({texture = "bg_white.png", mask="mask_background.png"})
+banners.base_transform = ({texture = "bg_white.png",
+    mask="mask_background.png"})
+
+banners.creation_form_func = function(state)
+    -- helper functions
+    state.update_player_inv = function(self)
+        local player = minetest.get_player_by_name(self.player)
+        local newbanner = player:get_wielded_item()
+        newbanner:set_metadata(state.banner:get_transform_string())
+        player:set_wielded_item(newbanner)
+    end
+    state.update_preview = function(self)
+        self:get("banner_preview"):setImage(self.banner:get_transform_string())
+        self:get("color_indicator"):setImage(self.current_color)
+    end
+    state.update_all = function(self)
+        self:update_preview()
+        self:update_player_inv()
+    end
+    -- initialize with empty banner
+    state.banner = banners.Banner:new(nil)
+    state.banner:push_transform(banners.base_transform)
+    state.current_color = "bg_white.png"
+    state:size(20,10)
+    state:image(3, 0.4, 4, 2, "banner_preview", nil)
+    state:image(2.4, 0.8, 0.7, 0.7, "color_indicator", state.current_color)
+    state:update_all()
+    -- color indicator
+    -- undo button
+    state:button(0.5, 0.3, 2, 1, "undo", "Undo"):click(function(self, state)
+            if #state.banner.transforms > 1 then
+                state.banner:pop_transform()
+                state:update_all()
+            end
+        end)
+    -- delete button
+    state:button(0.5, 1.3, 2, 1, "delete", "Delete"):click(function(self, state)
+            state.banner.transforms = {banners.base_transform}
+            state:update_all()
+        end)
+    -- add banners colors
+    local x = 7
+    local y = .3
+    for i in ipairs(banners.colors) do 
+        local b = state:button(x, y, 1, 1, banners.colors[i], "")
+        b:setImage("bg_"..banners.colors[i]..".png")
+        b:click(function(self, state)
+                    state.current_color = "bg_"..self.name..".png"
+                    state:update_preview()
+                    -- todo: update masks or something
+                end
+            )
+        x = x + 1
+        if x > 19 then
+            y = y + 1
+            x = 7
+        end
+    end
+    -- add banners buttons
+    local x = 1
+    local y = 3
+    for i in ipairs(banners.masks) do
+        local b = state:button(x, y, 2, 1, banners.masks[i], "")
+        b:setImage(banners.masks[i]..".png")
+        b:click(function(self, state)
+                    state.banner:push_transform({texture=state.current_color, mask=self.name..".png"})
+                    state:update_all()
+                end
+        )
+        x = x + 2
+        if x > 17.5 then
+            y = y + 1
+            x = 1
+        end
+    end
+    return true
+end
 
 banners.creation_form = smartfs.create("banners:banner_creation",
-        function(state)
-            -- helper functions
-            state.update_player_inv = function(self)
-                local player = minetest.get_player_by_name(self.player)
-                local newbanner = player:get_wielded_item()
-                newbanner:set_metadata(state.banner:get_transform_string())
-                player:set_wielded_item(newbanner)
-            end
-            state.update_preview = function(self)
-                self:get("banner_preview"):setImage(self.banner:get_transform_string())
-                self:get("color_indicator"):setImage(self.current_color)
-            end
-            state.update_all = function(self)
-                self:update_preview()
-                self:update_player_inv()
-            end
-            -- initialize with empty banner
-            state.banner = banners.Banner:new(nil)
-            state.banner:push_transform(banners.base_transform)
-            state.current_color = "bg_white.png"
-            state:size(20,10)
-            state:image(3, 0.4, 4, 2, "banner_preview", nil)
-            state:image(2.4, 0.8, 0.7, 0.7, "color_indicator", state.current_color)
-            state:update_all()
-            -- color indicator
-            -- undo button
-            state:button(0.5, 0.3, 2, 1, "undo", "Undo"):click(function(self, state)
-                    if #state.banner.transforms > 1 then
-                        state.banner:pop_transform()
-                        state:update_all()
-                    end
-                end)
-            -- delete button
-            state:button(0.5, 1.3, 2, 1, "delete", "Delete"):click(function(self, state)
-                    state.banner.transforms = {banners.base_transform}
-                    state:update_all()
-                end)
-            -- add banners colors
-            local x = 7
-            local y = .3
-            for i in ipairs(banners.colors) do 
-                local b = state:button(x, y, 1, 1, banners.colors[i], "")
-                b:setImage("bg_"..banners.colors[i]..".png")
-                b:click(function(self, state)
-                            state.current_color = "bg_"..self.name..".png"
-                            state:update_preview()
-                            -- todo: update masks or something
-                        end
-                    )
-                x = x + 1
-                if x > 19 then
-                    y = y + 1
-                    x = 7
-                end
-            end
-            -- add banners buttons
-            local x = 1
-            local y = 3
-            for i in ipairs(banners.masks) do
-                local b = state:button(x, y, 2, 1, banners.masks[i], "")
-                b:setImage(banners.masks[i]..".png")
-                b:click(function(self, state)
-                            state.banner:push_transform({texture=state.current_color, mask=self.name..".png"})
-                            state:update_all()
-                        end
-                )
-                x = x + 2
-                if x > 17.5 then
-                    y = y + 1
-                    x = 1
-                end
-            end
-            return true
-        end
-    )
+    banners.creation_form_func);
 
 
 -- banner definition
@@ -181,61 +183,6 @@ banners.banner_after_place = function (pos, player, itemstack, pointed_thing)
     minetest.add_entity(pos, "banners:banner_ent")
 end
 
--- da wooden banner
-minetest.register_node("banners:wooden_banner",
-    {
-        drawtype = "mesh",
-        mesh = "banner_support.x",
-        tiles = {"banner_support.png"},
-        description = "Wooden banner",
-        groups = {choppy=2, dig_immediate=2},
-        diggable = true,
-        stack_max = 1,
-        paramtype="light",
-        paramtype2="facedir",
-        after_place_node = function (pos, player, itemstack, pointed_thing)
-            banners.banner_after_place(pos, player, itemstack, pointed_thing)
-          end,
-        on_destruct = function(pos)
-            banners.banner_on_destruct(pos)
-        end,
-        on_use = function(i, p, pt)
-            banners.banner_on_use(i, p, pt)
-        end,
-        on_dig = function(pos, n, p) 
-            banners.banner_on_dig(pos, n, p)
-        end
-    }
-)
-
--- steel banner
-minetest.register_node("banners:steel_banner",
-    {
-        drawtype = "mesh",
-        mesh = "banner_support.x",
-        tiles = {"steel_support.png"},
-        description = "Steel banner",
-        groups = {cracky=2},
-        diggable = true,
-        stack_max = 1,
-        paramtype = "light",
-        paramtype2 = "facedir",
-        after_place_node = function (pos, player, itemstack, pointed_thing)
-            banners.banner_after_place(pos, player, itemstack, pointed_thing)
-          end,
-        on_destruct = function(pos)
-            banners.banner_on_destruct(pos)
-        end,
-        on_use = function(i, p, pt)
-            banners.banner_on_use(i, p, pt)
-        end,
-        on_dig = function(pos, n, p) 
-            banners.banner_on_dig(pos, n, p)
-        end
-
-    }
-)
-
 -- banner entity
 local set_banner_texture
 set_banner_texture = function (obj, texture)
@@ -273,130 +220,11 @@ minetest.register_entity("banners:banner_ent",
     }
 )
 
-
--- items
-
-minetest.register_craftitem("banners:banner_sheet",
-    {
-        groups = {},
-        description = "Banner sheet",
-        inventory_image = "banner_sheet.png",
-        stack_max = 1,
-        metadata = "",
-    }
-)
-
-minetest.register_craftitem("banners:wooden_pole",
-    {
-        groups = {},
-        description = "Wooden pole",
-        inventory_image = "wooden_pole.png"
-    }
-)
-
-minetest.register_craftitem("banners:wooden_base",
-    {
-        groups = {},
-        description = "Wooden base",
-        inventory_image = "wooden_base.png"
-    }
-)
-
-minetest.register_craftitem("banners:steel_pole",
-    {
-        groups = {},
-        description = "Steel pole",
-        inventory_image = "steel_pole.png"
-    }
-)
-
-minetest.register_craftitem("banners:steel_base",
-    {
-        groups = {},
-        description = "Steel base",
-        inventory_image = "steel_base.png"
-    }
-)
-
--- craft recipes
-minetest.register_craft( -- wooden flag pole
-    {
-        output = "banners:wooden_pole 1",
-        recipe = {
-            {"", "", "default:stick"},
-            {"", "default:stick", ""},
-            {"default:stick", "", ""}
-        }
-    }
-)
-
-minetest.register_craft( -- steel flag pole
-    {
-        output = "banners:steel_pole 1",
-        recipe = {
-            {"", "", "default:steel_ingot"},
-            {"", "default:steel_ingot", ""},
-            {"default:steel_ingot", "", ""}
-        }
-    }
-)
-
-minetest.register_craft( -- wooden flag support base
-    {
-        output = "banners:wooden_base 1",
-        recipe = {
-            {"", "default:stick", ""},
-            {"default:stick", "", "default:stick"},
-            {"group:wood", "group:wood", "group:wood"}
-        }
-    }
-)
-
-minetest.register_craft( -- steel support
-    {
-        output = "banners:steel_base",
-        recipe = {
-            {"", "default:steel_ingot", ""},
-            {"default:steel_ingot", "", "default:steel_ingot"},
-            {"", "default:steelblock", ""}
-        }
-    }
-)
-
-minetest.register_craft( -- banner sheet
-    {
-        output = "banners:banner_sheet 1",
-        recipe = {
-            {"", "", ""},
-            {"farming:cotton", "farming:cotton", "farming:cotton"},
-            {"farming:cotton", "farming:cotton", "farming:cotton"}
-        }
-    }
-)
-
-minetest.register_craft( -- wooden support
-    {
-        output = "banners:wooden_banner 1",
-        recipe = {
-            {"", "banners:banner_sheet", ""},
-            {"", "banners:wooden_pole", ""},
-            {"", "banners:wooden_base", ""}
-        }
-    }
-)
-
-minetest.register_craft( -- steel support
-    {
-        output = "banners:steel_banner 1",
-        recipe = {
-            {"", "banners:banner_sheet", ""},
-            {"", "banners:steel_pole", ""},
-            {"", "banners:steel_base", ""}
-        }
-    }
-)
-
 if minetest.get_modpath("factions") then
     dofile(minetest.get_modpath("banners").."/factions.lua")
 end
+
+dofile(minetest.get_modpath("banners").."/items.lua")
+dofile(minetest.get_modpath("banners").."/nodes.lua")
+dofile(minetest.get_modpath("banners").."/crafts.lua")
 
