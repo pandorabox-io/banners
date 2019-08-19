@@ -16,7 +16,7 @@ minetest.register_craft( -- steel flag pole
         output = "banners:steel_pole 1",
         recipe = {
             {"", "", "default:steel_ingot"},
-            {"", "default:steel_ingot", ""},
+            {"default:stick", "default:steel_ingot", "default:stick"},
             {"default:steel_ingot", "", ""}
         }
     }
