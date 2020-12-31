@@ -159,11 +159,12 @@ banners.banner_on_use = function(itemstack, player, pointed_thing)
 end
 
 banners.banner_on_dig = function(pos, node, player)
+    if not player or minetest.is_protected(pos, player:get_player_name()) then
+		return
+	end
     local meta = minetest.get_meta(pos)
-    if player then 
-        local inventory = player:get_inventory()
-        inventory:add_item("main", {name=node.name, count=1, wear=0, metadata=meta:get_string("banner")})
-    end
+    local inventory = player:get_inventory()
+    inventory:add_item("main", {name=node.name, count=1, wear=0, metadata=meta:get_string("banner")})
     minetest.remove_node(pos)
 end
 
