@@ -192,7 +192,7 @@ end
 
 
 banners.banner_on_activate = function(self)
-    local pos = self.object:getpos()
+    local pos = self.object:get_pos()
     local banner = minetest.get_meta(pos):get_string("banner")
     local banner_face = minetest.get_node(pos).param2
     local yaw = 0.
@@ -205,7 +205,7 @@ banners.banner_on_activate = function(self)
     elseif banner_face == 3 then
         yaw = 4.71238898038469 -- 3 * pi / 2
     end
-    self.object:setyaw(yaw)
+    self.object:set_yaw(yaw)
     if banner then
         set_banner_texture(self.object, banner)
     end
