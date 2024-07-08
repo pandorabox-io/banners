@@ -43,7 +43,7 @@ banners.creation_form_func = function(state)
     state.update_player_inv = function(self)
         local player = minetest.get_player_by_name(self.player)
         local newbanner = player:get_wielded_item()
-        newbanner:set_metadata(state.banner:get_transform_string())
+        newbanner:get_meta():set_string("", state.banner:get_transform_string())
         player:set_wielded_item(newbanner)
     end
     state.update_preview = function(self)
@@ -180,7 +180,7 @@ end
 
 banners.banner_after_place = function (pos, player, itemstack, pointed_thing)
     minetest.get_node(pos).param2 = banners.determine_flag_direction(pos, pointed_thing)
-    minetest.get_meta(pos):set_string("banner", itemstack:get_metadata())
+    minetest.get_meta(pos):set_string("banner", itemstack:get_meta():get_string(""))
     minetest.add_entity(pos, "banners:banner_ent")
 end
 
@@ -211,15 +211,15 @@ banners.banner_on_activate = function(self)
     end
 end
 
-minetest.register_entity("banners:banner_ent",
-    {
+minetest.register_entity("banners:banner_ent", {
+    initial_properties = {
         collisionbox = {0,0,0,0,0,0},
         visual = "mesh",
         textures = {"banner_uv_text"},
         mesh = "banner_pole.x",
-        on_activate = banners.banner_on_activate,
-    }
-)
+    },
+    on_activate = banners.banner_on_activate,
+})
 
 if minetest.get_modpath("factions") then
     dofile(minetest.get_modpath("banners").."/factions.lua")
