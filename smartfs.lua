@@ -144,6 +144,7 @@ function smartfs._makeState_(form, player, params, is_inv)
 			local file = io.open(file_name, "r")
 			if file then
 				local table = core.deserialize(file:read("*all"))
+				file:close()
 				if type(table) == "table" then
 					if table.size then
 						self._size = table.size
