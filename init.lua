@@ -1,4 +1,5 @@
-dofile(minetest.get_modpath("banners").."/smartfs.lua")
+local MP = core.get_modpath("banners") .. "/"
+dofile(MP .. "smartfs.lua")
 
 banners = {}
 
@@ -236,11 +237,11 @@ core.register_entity("banners:banner_ent", {
     on_activate = banners.banner_on_activate,
 })
 
-    dofile(minetest.get_modpath("banners").."/factions.lua")
 if core.get_modpath("factions") then
+    dofile(MP .. "factions.lua")
 end
 
-dofile(minetest.get_modpath("banners").."/items.lua")
-dofile(minetest.get_modpath("banners").."/nodes.lua")
-dofile(minetest.get_modpath("banners").."/crafts.lua")
+dofile(MP .. "items.lua")
+dofile(MP .. "nodes.lua")
+dofile(MP .. "crafts.lua")
 

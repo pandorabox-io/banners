@@ -377,29 +377,21 @@ end)
 
 smartfs.element("button", {
 	build = function(self)
+		local common_prefix = self.data.pos.x .. "," .. self.data.pos.y
+			.. ";" .. self.data.size.w .. "," ..self.data.size.h
+		local common_sufix = ";" .. self.name
+			.. ";" .. self.data.value
+			.. "]"
 		if self.data.img then
 			return "image_button["
-				.. self.data.pos.x .. "," .. self.data.pos.y
-				.. ";" .. self.data.size.w .. "," ..self.data.size.h
+				.. common_prefix
 				.. ";" .. self.data.img
-				.. ";" .. self.name
-				.. ";" .. self.data.value
-				.. "]"
+				.. common_sufix
 		else
 			if self.data.closes then
-				return "button_exit["
-					.. self.data.pos.x .. "," .. self.data.pos.y
-					.. ";" .. self.data.size.w .. "," ..self.data.size.h
-					.. ";" .. self.name
-					.. ";" .. self.data.value
-					.. "]"
+				return "button_exit[" .. common_prefix .. common_sufix
 			else
-				return "button["
-					.. self.data.pos.x .. "," .. self.data.pos.y
-					.. ";" .. self.data.size.w .. "," .. self.data.size.h
-					.. ";" .. self.name
-					.. ";" .. self.data.value
-					.. "]"
+				return "button[" .. common_prefix .. common_sufix
 			end
 		end
 	end,
@@ -517,27 +509,22 @@ smartfs.element("label", {
 
 smartfs.element("field", {
 	build = function(self)
+		local common = self.data.pos.x .. "," .. self.data.pos.y
+			.. ";" .. self.data.size.w .. "," .. self.data.size.h
+			.. ";" .. self.name
+			.. ";" .. self.data.label
 		if self.data.ml then
 			return "textarea["
-				.. self.data.pos.x .. "," .. self.data.pos.y
-				.. ";" .. self.data.size.w .. "," .. self.data.size.h
-				.. ";" .. self.name
-				.. ";" .. self.data.label
+				.. common
 				.. ";" .. self.data.value
 				.. "]"
 		elseif self.data.pwd then
 			return "pwdfield["
-				.. self.data.pos.x .. "," .. self.data.pos.y
-				.. ";" .. self.data.size.w .. "," .. self.data.size.h
-				.. ";" .. self.name
-				.. ";" .. self.data.label
+				.. common
 				.. "]"
 		else
 			return "field["
-				.. self.data.pos.x .. "," .. self.data.pos.y
-				.. ";" .. self.data.size.w .. "," .. self.data.size.h
-				.. ";" .. self.name
-				.. ";" .. self.data.label
+				.. common
 				.. ";" .. self.data.value
 				.. "]"
 		end
@@ -598,22 +585,14 @@ smartfs.element("image", {
 
 smartfs.element("checkbox", {
 	build = function(self)
+		local out = "checkbox["
+			.. self.data.pos.x .. "," .. self.data.pos.y
+			.. ";" .. self.name
+			.. ";" .. self.data.label
 		if self.data.value then
-			return "checkbox["..
-				self.data.pos.x..","..self.data.pos.y..
-				";"..
-				self.name..
-				";"..
-				self.data.label..
-				";true]"
+			return out .. ";true]"
 		else
-			return "checkbox["..
-				self.data.pos.x..","..self.data.pos.y..
-				";"..
-				self.name..
-				";"..
-				self.data.label..
-				";false]"
+			return out .. ";false]"
 		end
 	end,
 	setPosition = function(self, x, y)
