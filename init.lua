@@ -35,13 +35,15 @@ banners.colors = {
     "brown", "darkbrown"
 }
 
-banners.base_transform = ({texture = "bg_white.png",
-    mask="mask_background.png"})
+banners.base_transform = {
+    texture = "bg_white.png",
+    mask = "mask_background.png"
+}
 
 banners.creation_form_func = function(state)
     -- helper functions
     state.update_player_inv = function(self)
-        local player = minetest.get_player_by_name(self.player)
+        local player = core.get_player_by_name(self.player)
         local newbanner = player:get_wielded_item()
         newbanner:get_meta():set_string("", state.banner:get_transform_string())
         player:set_wielded_item(newbanner)
@@ -58,7 +60,7 @@ banners.creation_form_func = function(state)
     state.banner = banners.Banner:new(nil)
     state.banner:push_transform(banners.base_transform)
     state.current_color = "bg_white.png"
-    state:size(20,10)
+    state:size(20, 10)
     state:image(3, 0.4, 4, 2, "banner_preview", nil)
     state:image(2.4, 0.8, 0.7, 0.7, "color_indicator", state.current_color)
     state:update_all()
@@ -68,25 +70,24 @@ banners.creation_form_func = function(state)
             if #state.banner.transforms > 1 then
                 state.banner:pop_transform()
                 state:update_all()
-            end
-        end)
+        end
+    end)
     -- delete button
     state:button(0.5, 1.3, 2, 1, "delete", "Delete"):click(function(self, state)
             state.banner.transforms = {banners.base_transform}
             state:update_all()
-        end)
+    end)
     -- add banners colors
     local x = 7
     local y = .3
-    for i in ipairs(banners.colors) do 
+    for i in ipairs(banners.colors) do
         local b = state:button(x, y, 1, 1, banners.colors[i], "")
-        b:setImage("bg_"..banners.colors[i]..".png")
         b:click(function(self, state)
                     state.current_color = "bg_"..self.name..".png"
                     state:update_preview()
-                    -- todo: update masks or something
-                end
-            )
+        b:setImage("bg_" .. banners.colors[i] .. ".png")
+            -- todo: update masks or something
+        end)
         x = x + 1
         if x > 19 then
             y = y + 1
@@ -98,12 +99,13 @@ banners.creation_form_func = function(state)
     local y = 3
     for i in ipairs(banners.masks) do
         local b = state:button(x, y, 2, 1, banners.masks[i], "")
-        b:setImage(banners.masks[i]..".png")
         b:click(function(self, state)
                     state.banner:push_transform({texture=state.current_color, mask=self.name..".png"})
                     state:update_all()
                 end
         )
+        b:setImage(banners.masks[i] .. ".png")
+        end)
         x = x + 2
         if x > 17.5 then
             y = y + 1
@@ -114,7 +116,7 @@ banners.creation_form_func = function(state)
 end
 
 banners.creation_form = smartfs.create("banners:banner_creation",
-    banners.creation_form_func);
+    banners.creation_form_func)
 
 
 -- banner definition
@@ -136,7 +138,8 @@ end
 function banners.Banner.get_transform_string(self)
     local final = {}
     for i in ipairs(self.transforms) do
-        table.insert(final, "("..self.transforms[i].texture.."^[mask:"..self.transforms[i].mask.."^[makealpha:0,0,0)")
+        table.insert(final, "(" .. self.transforms[i].texture
+            .. "^[mask:" .. self.transforms[i].mask .. "^[makealpha:0,0,0)")
     end
     local ret = table.concat(final, "^")
     return ret
@@ -146,10 +149,12 @@ end
 banners.determine_flag_direction = function(pos, pointed_thing)
     local above = pointed_thing.above
     local under = pointed_thing.under
-    local dir = {x = under.x - above.x,
-                 y = under.y - above.y,
-                 z = under.z - above.z}
-    return minetest.dir_to_wallmounted(dir)
+    local dir = {
+        x = under.x - above.x,
+        y = under.y - above.y,
+        z = under.z - above.z
+    }
+    return core.dir_to_wallmounted(dir)
 end
 
 banners.banner_on_use = function(itemstack, player, pointed_thing)
@@ -159,18 +164,23 @@ banners.banner_on_use = function(itemstack, player, pointed_thing)
 end
 
 banners.banner_on_dig = function(pos, node, player)
-    if not player or minetest.is_protected(pos, player:get_player_name()) then
+    if not player or core.is_protected(pos, player:get_player_name()) then
 		return
 	end
-    local meta = minetest.get_meta(pos)
+    local meta = core.get_meta(pos)
     local inventory = player:get_inventory()
-    inventory:add_item("main", {name=node.name, count=1, wear=0, metadata=meta:get_string("banner")})
-    minetest.remove_node(pos)
+    inventory:add_item("main", {
+        name = node.name,
+        count = 1,
+        wear = 0,
+        metadata = meta:get_string("banner")
+    })
+    core.remove_node(pos)
 end
 
 banners.banner_on_destruct = function(pos, node, player)
-    local objects = minetest.get_objects_inside_radius(pos, 0.5)
-    for _,v in ipairs(objects) do
+    local objects = core.get_objects_inside_radius(pos, 0.5)
+    for _, v in ipairs(objects) do
         local e = v:get_luaentity()
         if e and e.name == "banners:banner_ent" then
             v:remove()
@@ -179,22 +189,22 @@ banners.banner_on_destruct = function(pos, node, player)
 end
 
 banners.banner_after_place = function (pos, player, itemstack, pointed_thing)
-    minetest.get_node(pos).param2 = banners.determine_flag_direction(pos, pointed_thing)
-    minetest.get_meta(pos):set_string("banner", itemstack:get_meta():get_string(""))
-    minetest.add_entity(pos, "banners:banner_ent")
+    core.get_node(pos).param2 = banners.determine_flag_direction(pos, pointed_thing)
+    core.get_meta(pos):set_string("banner", itemstack:get_meta():get_string(""))
+    core.add_entity(pos, "banners:banner_ent")
 end
 
 -- banner entity
 local set_banner_texture
-set_banner_texture = function (obj, texture)
-    obj:set_properties({textures={"banner_uv_text.png^"..texture}})
+set_banner_texture = function(obj, texture)
+    obj:set_properties({ textures = { "banner_uv_text.png^" .. texture } })
 end
 
 
 banners.banner_on_activate = function(self)
     local pos = self.object:get_pos()
-    local banner = minetest.get_meta(pos):get_string("banner")
-    local banner_face = minetest.get_node(pos).param2
+    local banner = core.get_meta(pos):get_string("banner")
+    local banner_face = core.get_node(pos).param2
     local yaw = 0.
     if banner_face == 2 then
         yaw = 0.
@@ -211,18 +221,18 @@ banners.banner_on_activate = function(self)
     end
 end
 
-minetest.register_entity("banners:banner_ent", {
+core.register_entity("banners:banner_ent", {
     initial_properties = {
-        collisionbox = {0,0,0,0,0,0},
+        collisionbox = { 0, 0, 0, 0, 0, 0 },
         visual = "mesh",
-        textures = {"banner_uv_text"},
+        textures = { "banner_uv_text" },
         mesh = "banner_pole.x",
     },
     on_activate = banners.banner_on_activate,
 })
 
-if minetest.get_modpath("factions") then
     dofile(minetest.get_modpath("banners").."/factions.lua")
+if core.get_modpath("factions") then
 end
 
 dofile(minetest.get_modpath("banners").."/items.lua")
