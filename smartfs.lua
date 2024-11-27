@@ -4,6 +4,9 @@
 --    by Rubenwardy
 ---------------------------
 
+local has_inventory_plus = core.get_modpath("inventory_plus") and true or false
+local has_unified_inventory = core.get_modpath("unified_inventory") and true or false
+
 smartfs = {
 	_fdef = {},
 	_edef = {},
@@ -59,17 +62,17 @@ function smartfs.element(name,data)
 end
 
 function smartfs.inventory_mod()
-	if unified_inventory then
+	if has_unified_inventory then
 		return "unified_inventory"
-	elseif inventory_plus then
+	elseif has_inventory_plus then
 		return "inventory_plus"
 	else
 		return nil
 	end
 end
 
-	if unified_inventory then
 function smartfs.add_to_inventory(form, icon, title)
+	if has_unified_inventory then
 		unified_inventory.register_button(form.name, {
 			type = "image",
 			image = icon,
@@ -83,7 +86,7 @@ function smartfs.add_to_inventory(form, icon, title)
 			end
 		})
 		return true
-	elseif inventory_plus then
+	elseif has_inventory_plus then
 		core.register_on_joinplayer(function(player)
 			inventory_plus.register_button(player, form.name, title)
 		end)
@@ -128,10 +131,10 @@ function smartfs._makeState_(form, player, params, is_inv)
 		end,
 		_show_ = function(self)
 			if self.is_inv then
-				if unified_inventory then
-				elseif inventory_plus then
+				if has_unified_inventory then
 					unified_inventory.set_inventory_formspec(
 						core.get_player_by_name(self.player), self.def.name)
+				elseif has_inventory_plus then
 					inventory_plus.set_inventory_formspec(
 						core.get_player_by_name(self.player), self:_getFS_(true))
 				end
