@@ -167,7 +167,7 @@ function smartfs._makeState_(form, player, params, is_inv)
 				res.size = self._size
 			end
 
-			for key,val in pairs(self._ele) do
+			for key, val in pairs(self._ele) do
 				res.ele[key] = val.data
 			end
 
@@ -452,7 +452,7 @@ smartfs.element("toggle", {
 			.. ";" .. self.data.list[self.data.id]
 			.. "]"
 	end,
-	submit = function(self,fields)
+	submit = function(self, fields)
 		if fields[self.name] then
 			self.data.id = self.data.id + 1
 			if self.data.id > #self.data.list then
