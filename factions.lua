@@ -182,8 +182,9 @@ core.register_node("banners:death_banner", {
     on_destruct = function(pos)
         banners.banner_on_destruct(pos)
     end,
-    on_dig = function(pos, n, p)
-        if core.is_protected(pos, p:get_player_name()) then
+    -- (pos, node, player)
+    on_dig = function(pos, _, player)
+        if core.is_protected(pos, player:get_player_name()) then
             return
         end
         local meta = core.get_meta(pos)
@@ -199,7 +200,8 @@ core.register_node("banners:death_banner", {
     end,
 })
 
-banners.after_powerbanner_placed = function(pos, player, itemstack, pointed_thing)
+-- (pos, player, itemstack, pointed_thing)
+banners.after_powerbanner_placed = function(pos, player, _, pointed_thing)
     core.get_node(pos).param2 = banners.determine_flag_direction(pos, pointed_thing)
     local faction = factions.players[player:get_player_name()]
     if not faction then
@@ -213,7 +215,8 @@ banners.after_powerbanner_placed = function(pos, player, itemstack, pointed_thin
     core.add_entity(pos, "banners:banner_ent")
 end
 
-banners.after_deathbanner_placed = function(pos, player, itemstack, pointed_thing)
+-- (pos, player, itemstack, pointed_thing)
+banners.after_deathbanner_placed = function(pos, player, _, pointed_thing)
     core.get_node(pos).param2 = banners.determine_flag_direction(pos, pointed_thing)
     local attacking_faction = factions.players[player:get_player_name()]
     if attacking_faction then

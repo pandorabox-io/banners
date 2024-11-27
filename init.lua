@@ -66,26 +66,26 @@ banners.creation_form_func = function(state)
     state:update_all()
     -- color indicator
     -- undo button
-    state:button(0.5, 0.3, 2, 1, "undo", "Undo"):click(function(self, state)
-            if #state.banner.transforms > 1 then
-                state.banner:pop_transform()
-                state:update_all()
+    state:button(0.5, 0.3, 2, 1, "undo", "Undo"):click(function(_, state2)
+        if #state2.banner.transforms > 1 then
+            state2.banner:pop_transform()
+            state2:update_all()
         end
     end)
     -- delete button
-    state:button(0.5, 1.3, 2, 1, "delete", "Delete"):click(function(self, state)
-            state.banner.transforms = {banners.base_transform}
-            state:update_all()
+    state:button(0.5, 1.3, 2, 1, "delete", "Delete"):click(function(_, state2)
+        state2.banner.transforms = { banners.base_transform }
+        state2:update_all()
     end)
     -- add banners colors
     local x = 7
     local y = .3
     for i in ipairs(banners.colors) do
         local b = state:button(x, y, 1, 1, banners.colors[i], "")
-        b:click(function(self, state)
-                    state.current_color = "bg_"..self.name..".png"
-                    state:update_preview()
         b:setImage("bg_" .. banners.colors[i] .. ".png")
+        b:click(function(self, state2)
+            state2.current_color = "bg_" .. self.name .. ".png"
+            state2:update_preview()
             -- todo: update masks or something
         end)
         x = x + 1
@@ -95,16 +95,17 @@ banners.creation_form_func = function(state)
         end
     end
     -- add banners buttons
-    local x = 1
-    local y = 3
+    x = 1
+    y = 3
     for i in ipairs(banners.masks) do
         local b = state:button(x, y, 2, 1, banners.masks[i], "")
-        b:click(function(self, state)
-                    state.banner:push_transform({texture=state.current_color, mask=self.name..".png"})
-                    state:update_all()
-                end
-        )
         b:setImage(banners.masks[i] .. ".png")
+        b:click(function(self, state2)
+            state2.banner:push_transform({
+                texture = state2.current_color,
+                mask = self.name .. ".png"
+            })
+            state2:update_all()
         end)
         x = x + 2
         if x > 17.5 then
@@ -146,7 +147,8 @@ function banners.Banner.get_transform_string(self)
 end
 
 -- helper function for determining the flag's direction
-banners.determine_flag_direction = function(pos, pointed_thing)
+-- (pos, pointed_thing)
+banners.determine_flag_direction = function(_, pointed_thing)
     local above = pointed_thing.above
     local under = pointed_thing.under
     local dir = {
@@ -157,7 +159,8 @@ banners.determine_flag_direction = function(pos, pointed_thing)
     return core.dir_to_wallmounted(dir)
 end
 
-banners.banner_on_use = function(itemstack, player, pointed_thing)
+-- (itemstack, player, pointed_thing)
+banners.banner_on_use = function(_, player)
     if player.is_player then
         banners.creation_form:show(player:get_player_name())
     end
@@ -178,7 +181,8 @@ banners.banner_on_dig = function(pos, node, player)
     core.remove_node(pos)
 end
 
-banners.banner_on_destruct = function(pos, node, player)
+-- (pos, node, player)
+banners.banner_on_destruct = function(pos)
     local objects = core.get_objects_inside_radius(pos, 0.5)
     for _, v in ipairs(objects) do
         local e = v:get_luaentity()
@@ -188,7 +192,8 @@ banners.banner_on_destruct = function(pos, node, player)
     end
 end
 
-banners.banner_after_place = function (pos, player, itemstack, pointed_thing)
+-- (pos, player, itemstack, pointed_thing)
+banners.banner_after_place = function(pos, _, itemstack, pointed_thing)
     core.get_node(pos).param2 = banners.determine_flag_direction(pos, pointed_thing)
     core.get_meta(pos):set_string("banner", itemstack:get_meta():get_string(""))
     core.add_entity(pos, "banners:banner_ent")

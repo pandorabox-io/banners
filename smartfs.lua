@@ -12,7 +12,7 @@ smartfs = {
 }
 
 -- the smartfs() function
-function smartfs.__call(self, name)
+function smartfs.__call(_, name)
 	return smartfs._fdef[name]
 end
 
@@ -75,7 +75,8 @@ function smartfs.add_to_inventory(form, icon, title)
 			image = icon,
 		})
 		unified_inventory.register_page(form.name, {
-			get_formspec = function(player, formspec)
+			-- (player, formspec)
+			get_formspec = function(player)
 				local name = player:get_player_name()
 				local opened = smartfs._show_(form, name, nil, true)
 				return { formspec = opened:_getFS_(false) }
@@ -120,7 +121,7 @@ function smartfs._makeState_(form, player, params, is_inv)
 			if self._size and size then
 				res = "size[" .. self._size.w .. "," .. self._size.h .. "]"
 			end
-			for key,val in pairs(self._ele) do
+			for _, val in pairs(self._ele) do
 				res = res .. val:build()
 			end
 			return res
@@ -139,15 +140,15 @@ function smartfs._makeState_(form, player, params, is_inv)
 				core.show_formspec(player, form.name, res)
 			end
 		end,
-		load = function(self,file)
-			local file = io.open(file, "r")
+		load = function(self, file_name)
+			local file = io.open(file_name, "r")
 			if file then
 				local table = core.deserialize(file:read("*all"))
 				if type(table) == "table" then
 					if table.size then
 						self._size = table.size
 					end
-					for key,val in pairs(table.ele) do
+					for _, val in pairs(table.ele) do
 						self:element(val.type, val)
 					end
 					return true
@@ -155,7 +156,7 @@ function smartfs._makeState_(form, player, params, is_inv)
 			end
 			return false
 		end,
-		save = function(self,file)
+		save = function(self, file_name)
 			local res = { ele = {} }
 
 			if self._size then
@@ -166,7 +167,7 @@ function smartfs._makeState_(form, player, params, is_inv)
 				res.ele[key] = val.data
 			end
 
-			local file = io.open(file, "w")
+			local file = io.open(file_name, "w")
 			if file then
 				file:write(core.serialize(res))
 				file:close()
@@ -288,8 +289,8 @@ function smartfs._makeState_(form, player, params, is_inv)
 				name = data.name,
 				root = self,
 				data = data,
-				remove = function(self)
-					self.root._ele[self.name] = nil
+				remove = function(self2)
+					self2.root._ele[self2.name] = nil
 				end
 			}
 
@@ -333,7 +334,7 @@ local function _sfs_recieve_(state, name, fields)
 			state._ele[key].data.value = val
 		end
 	end
-	for key,val in pairs(state._ele) do
+	for _, val in pairs(state._ele) do
 		if val.submit then
 			if val:submit(fields) == true then
 				return true
@@ -401,7 +402,8 @@ smartfs.element("button", {
 			end
 		end
 	end,
-	submit = function(self,fields,state)
+	-- (self, fields, state)
+	submit = function(self, fields)
 		if fields[self.name] and self._click then
 			self:_click(self.root)
 		end
@@ -413,13 +415,13 @@ smartfs.element("button", {
 	setPosition = function(self, x, y)
 		self.data.pos = { x = x, y = y }
 	end,
-	getPosition = function(self,x,y)
+	getPosition = function(self)
 		return self.data.pos
 	end,
 	setSize = function(self, w, h)
 		self.data.size = { w = w, h = h }
 	end,
-	getSize = function(self,x,y)
+	getSize = function(self)
 		return self.data.size
 	end,
 	onClick = function(self, func)
@@ -471,13 +473,13 @@ smartfs.element("toggle", {
 	setPosition = function(self, x, y)
 		self.data.pos = { x = x, y = y }
 	end,
-	getPosition = function(self,x,y)
+	getPosition = function(self)
 		return self.data.pos
 	end,
 	setSize = function(self, w, h)
 		self.data.size = { w = w, h = h }
 	end,
-	getSize = function(self,x,y)
+	getSize = function(self)
 		return self.data.size
 	end,
 	setId = function(self, id)
@@ -501,7 +503,7 @@ smartfs.element("label", {
 	setPosition = function(self, x, y)
 		self.data.pos = { x = x, y = y }
 	end,
-	getPosition = function(self,x,y)
+	getPosition = function(self)
 		return self.data.pos
 	end,
 	setText = function(self, text)
@@ -542,13 +544,13 @@ smartfs.element("field", {
 	setPosition = function(self, x, y)
 		self.data.pos = { x = x, y = y }
 	end,
-	getPosition = function(self,x,y)
+	getPosition = function(self)
 		return self.data.pos
 	end,
 	setSize = function(self, w, h)
 		self.data.size = { w = w, h = h }
 	end,
-	getSize = function(self,x,y)
+	getSize = function(self)
 		return self.data.size
 	end,
 	setText = function(self, text)
@@ -576,13 +578,13 @@ smartfs.element("image", {
 	setPosition = function(self, x, y)
 		self.data.pos = { x = x, y = y }
 	end,
-	getPosition = function(self,x,y)
+	getPosition = function(self)
 		return self.data.pos
 	end,
 	setSize = function(self, w, h)
 		self.data.size = { w = w, h = h }
 	end,
-	getSize = function(self,x,y)
+	getSize = function(self)
 		return self.data.size
 	end,
 	setImage = function(self, text)
@@ -616,13 +618,13 @@ smartfs.element("checkbox", {
 	setPosition = function(self, x, y)
 		self.data.pos = { x = x, y = y }
 	end,
-	getPosition = function(self,x,y)
+	getPosition = function(self)
 		return self.data.pos
 	end,
 	setSize = function(self, w, h)
 		self.data.size = { w = w, h = h }
 	end,
-	getSize = function(self,x,y)
+	getSize = function(self)
 		return self.data.size
 	end,
 	setText = function(self, text)
@@ -675,13 +677,13 @@ smartfs.element("list", {
 	setPosition = function(self, x, y)
 		self.data.pos = { x = x, y = y }
 	end,
-	getPosition = function(self,x,y)
+	getPosition = function(self)
 		return self.data.pos
 	end,
 	setSize = function(self, w, h)
 		self.data.size = { w = w, h = h }
 	end,
-	getSize = function(self,x,y)
+	getSize = function(self)
 		return self.data.size
 	end,
 	addItem = function(self, item)
@@ -719,13 +721,13 @@ smartfs.element("inventory", {
 	setPosition = function(self, x, y)
 		self.data.pos = { x = x, y = y }
 	end,
-	getPosition = function(self,x,y)
+	getPosition = function(self)
 		return self.data.pos
 	end,
 	setSize = function(self, w, h)
 		self.data.size = { w = w, h = h }
 	end,
-	getSize = function(self,x,y)
+	getSize = function(self)
 		return self.data.size
 	end,
 	-- available inventory locations
