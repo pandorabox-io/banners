@@ -1,7 +1,9 @@
 local MP = core.get_modpath("banners") .. "/"
 dofile(MP .. "smartfs.lua")
 
-banners = {}
+banners = {
+    version = 20241128.1419
+}
 
 banners.masks = {
     "bend_left", "bend_left_outline",
