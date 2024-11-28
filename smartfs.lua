@@ -43,7 +43,7 @@ end
 core.after(0, function()
     smartfs.loaded = true
 end)
-function smartfs.dynamic(name,player)
+function smartfs.dynamic(name, player)
     if not smartfs._dynamic_warned then
         smartfs._dynamic_warned = true
         print("SmartFS - (Warning) On the fly forms are being used. May cause bad things to happen")
@@ -53,7 +53,7 @@ function smartfs.dynamic(name,player)
     smartfs.opened[player] = state
     return state
 end
-function smartfs.element(name,data)
+function smartfs.element(name, data)
     if smartfs._edef[name] then
         error("SmartFS - (Error) Element type " .. name .. " already exists!")
     end
