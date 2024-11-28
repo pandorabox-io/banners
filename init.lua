@@ -133,11 +133,10 @@ banners.creation_form = smartfs.create("banners:banner_creation",
 
 
 -- banner definition
-banners.Banner = {
-    transforms = {}
-}
+banners.Banner = {}
+
 function banners.Banner:new(banner)
-    banner = banner or {}
+    banner = banner or { transforms = {} }
     setmetatable(banner, self)
     self.__index = self
     return banner
