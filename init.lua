@@ -201,8 +201,7 @@ banners.banner_after_place = function(pos, _, itemstack, pointed_thing)
 end
 
 -- banner entity
-local set_banner_texture
-set_banner_texture = function(obj, texture)
+local set_banner_texture = function(obj, texture)
     obj:set_properties({ textures = { "banner_uv_text.png^" .. texture } })
 end
 
