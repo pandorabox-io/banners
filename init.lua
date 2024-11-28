@@ -82,9 +82,9 @@ banners.creation_form_func = function(state)
     -- add banners colors
     local x = 7
     local y = .3
-    for i in ipairs(banners.colors) do
-        local b = state:button(x, y, 1, 1, banners.colors[i], "")
-        b:setImage("bg_" .. banners.colors[i] .. ".png")
+    for _, color in ipairs(banners.colors) do
+        local b = state:button(x, y, 1, 1, color, "")
+        b:setImage("bg_" .. color .. ".png")
         b:click(function(self, state2)
             state2.current_color = "bg_" .. self.name .. ".png"
             state2:get("color_indicator"):setImage(state2.current_color)
@@ -99,9 +99,9 @@ banners.creation_form_func = function(state)
     -- add banners buttons
     x = 1
     y = 3
-    for i in ipairs(banners.masks) do
-        local b = state:button(x, y, 2, 1, banners.masks[i], "")
-        b:setImage(banners.masks[i] .. ".png")
+    for _, mask in ipairs(banners.masks) do
+        local b = state:button(x, y, 2, 1, mask, "")
+        b:setImage(mask .. ".png")
         b:click(function(self, state2)
             state2.banner:push_transform({
                 texture = state2.current_color,
@@ -140,9 +140,9 @@ function banners.Banner.pop_transform(self)
 end
 function banners.Banner.get_transform_string(self)
     local final = {}
-    for i in ipairs(self.transforms) do
-        table.insert(final, "(" .. self.transforms[i].texture
-            .. "^[mask:" .. self.transforms[i].mask .. "^[makealpha:0,0,0)")
+    for _, transform in ipairs(self.transforms) do
+        table.insert(final, "(" .. transform.texture
+            .. "^[mask:" .. transform.mask .. "^[makealpha:0,0,0)")
     end
     local ret = table.concat(final, "^")
     return ret
