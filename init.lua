@@ -2,7 +2,7 @@ local MP = core.get_modpath("banners") .. "/"
 dofile(MP .. "smartfs.lua")
 
 banners = {
-    version = 20241128.1507
+    version = 20241128.1533
 }
 
 banners.masks = {
@@ -106,7 +106,11 @@ banners.creation_form_func = function(state)
             state2.current_color = "bg_" .. self.name .. ".png"
             state2:get("color_indicator"):setImage(state2.current_color)
             state2.banner.color = state2.current_color
-            -- todo: update masks or something
+            -- update masks
+            for _, mask in ipairs(banners.masks) do
+                state2:get(mask):setImage("(" .. state2.current_color
+                    .. "^[mask:" .. mask .. ".png^[makealpha:0,0,0)")
+            end
         end)
         x = x + 1
         if x > 19 then
@@ -119,7 +123,8 @@ banners.creation_form_func = function(state)
     y = 3
     for _, mask in ipairs(banners.masks) do
         local b = state:button(x, y, 2, 1, mask, "")
-        b:setImage(mask .. ".png")
+        b:setImage("(" .. state.current_color
+            .. "^[mask:" .. mask .. ".png^[makealpha:0,0,0)")
         b:click(function(self, state2)
             state2.banner:push_transform({
                 texture = state2.current_color,
