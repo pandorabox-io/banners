@@ -146,13 +146,13 @@ function smartfs._makeState_(form, player, params, is_inv)
         load = function(self, file_name)
             local file = io.open(file_name, "r")
             if file then
-                local table = core.deserialize(file:read("*all"))
+                local data = core.deserialize(file:read("*all"))
                 file:close()
-                if type(table) == "table" then
-                    if table.size then
-                        self._size = table.size
+                if type(data) == "table" then
+                    if data.size then
+                        self._size = data.size
                     end
-                    for _, val in pairs(table.ele) do
+                    for _, val in pairs(data.ele) do
                         self:element(val.type, val)
                     end
                     return true
