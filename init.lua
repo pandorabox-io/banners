@@ -29,15 +29,11 @@ banners.masks = {
     "star_chevron", "checkered_8_4", "checkered_16_8"
 }
 
--- The amount of transformations needs to be capped somewhere
--- to avoid crashing server.
--- It doesn't make sense to have any one mask multiple times
--- but users normally don't follow strict logic when being
--- creative, so we give them plenty of space to work with.
--- A better approach would be to strip duplicates and to
--- drop all previous masks if a full background is dropped
--- on top of other masks.
-banners.max_transformations = #banners.masks * #banners.masks
+-- It is now unlikely for the server to crash from too long
+-- history since we now trim out garbage when converting to
+-- metadata. This limit is now just to avoid run-time
+-- memory bloat.
+banners.max_undo_levels = 256
 
 banners.colors = {
     "black", "cyan", "green", "white",
@@ -143,7 +139,7 @@ function banners.Banner:new(banner)
 end
 function banners.Banner.push_transform(self, transform)
     table.insert(self.transforms, transform)
-    if #self.transforms > banners.max_transformations then
+    if #self.transforms > banners.max_undo_levels then
         table.remove(self.transforms, 1)
     end
 end
@@ -152,10 +148,24 @@ function banners.Banner.pop_transform(self)
 end
 function banners.Banner.get_transform_string(self)
     local final = {}
-    for _, transform in ipairs(self.transforms) do
-        table.insert(final, "(" .. transform.texture
-            .. "^[mask:" .. transform.mask .. "^[makealpha:0,0,0)")
-    end
+    local used = {}
+    local transform
+    -- work backwards to keep resulting data small
+    local i = #self.transforms
+    repeat
+        transform = self.transforms[i]
+        -- same mask can be trimmed out only using most recent
+        if not used[transform.mask] then
+            used[transform.mask] = true
+            table.insert(final, 1, "(" .. transform.texture
+                .. "^[mask:" .. transform.mask .. "^[makealpha:0,0,0)")
+            -- anything before a background is fully covered
+            if "mask_background.png" == transform.mask then
+                break
+            end
+        end
+        i = i - 1
+    until i == 0
     local ret = table.concat(final, "^")
     return ret
 end
