@@ -43,19 +43,20 @@ banners.base_transform = {
 
 banners.creation_form_func = function(state)
     -- helper functions
-    state.update_player_inv = function(self)
+    state.update_player_inv = function(self, transform_string)
         local player = core.get_player_by_name(self.player)
         local newbanner = player:get_wielded_item()
-        newbanner:get_meta():set_string("", state.banner:get_transform_string())
+        newbanner:get_meta():set_string("", transform_string)
         player:set_wielded_item(newbanner)
     end
-    state.update_preview = function(self)
-        self:get("banner_preview"):setImage(self.banner:get_transform_string())
+    state.update_preview = function(self, transform_string)
+        self:get("banner_preview"):setImage(transform_string)
         self:get("color_indicator"):setImage(self.current_color)
     end
     state.update_all = function(self)
-        self:update_preview()
-        self:update_player_inv()
+        local transform_string = self.banner:get_transform_string()
+        self:update_preview(transform_string)
+        self:update_player_inv(transform_string)
     end
     -- initialize with empty banner
     state.banner = banners.Banner:new(nil)
@@ -86,7 +87,7 @@ banners.creation_form_func = function(state)
         b:setImage("bg_" .. banners.colors[i] .. ".png")
         b:click(function(self, state2)
             state2.current_color = "bg_" .. self.name .. ".png"
-            state2:update_preview()
+            state2:get("color_indicator"):setImage(state2.current_color)
             -- todo: update masks or something
         end)
         x = x + 1
