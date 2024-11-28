@@ -64,7 +64,7 @@ banners.creation_form_func = function(state)
         self:get("banner_preview"):setImage(transform_string)
         self:get("color_indicator"):setImage(self.current_color)
     end
-    state.update_all = function(self)
+    state.update_preview_inv = function(self)
         local transform_string = self.banner:get_transform_string()
         self:update_preview(transform_string)
         self:update_player_inv(transform_string)
@@ -82,19 +82,19 @@ banners.creation_form_func = function(state)
     state:size(20, 10)
     state:image(3, 0.4, 4, 2, "banner_preview", nil)
     state:image(2.4, 0.8, 0.7, 0.7, "color_indicator", state.current_color)
-    state:update_all()
+    state:update_preview_inv()
     -- color indicator
     -- undo button
     state:button(0.5, 0.3, 2, 1, "undo", "Undo"):click(function(_, state2)
         if #state2.banner.transforms > 1 then
             state2.banner:pop_transform()
-            state2:update_all()
+            state2:update_preview_inv()
         end
     end)
     -- delete button
     state:button(0.5, 1.3, 2, 1, "delete", "Delete"):click(function(_, state2)
         state2.banner.transforms = { banners.base_transform }
-        state2:update_all()
+        state2:update_preview_inv()
     end)
     -- add banners colors
     local x = 7
@@ -125,7 +125,7 @@ banners.creation_form_func = function(state)
                 texture = state2.current_color,
                 mask = self.name .. ".png"
             })
-            state2:update_all()
+            state2:update_preview_inv()
         end)
         x = x + 2
         if x > 17.5 then
