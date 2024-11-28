@@ -2,7 +2,7 @@ local MP = core.get_modpath("banners") .. "/"
 dofile(MP .. "smartfs.lua")
 
 banners = {
-    version = 20241128.1419
+    version = 20241128.1507
 }
 
 banners.masks = {
@@ -37,6 +37,9 @@ banners.masks = {
 -- memory bloat.
 banners.max_undo_levels = 256
 
+-- cache of player histories
+local histories = {}
+
 banners.colors = {
     "black", "cyan", "green", "white",
     "blue", "darkblue", "red", "yellow",
@@ -66,10 +69,16 @@ banners.creation_form_func = function(state)
         self:update_preview(transform_string)
         self:update_player_inv(transform_string)
     end
-    -- initialize with empty banner
-    state.banner = banners.Banner:new(nil)
-    state.banner:push_transform(banners.base_transform)
-    state.current_color = "bg_white.png"
+    if histories[state.player] then
+        -- initialize with saved history
+        state.banner = histories[state.player]
+    else
+        -- initialize with empty banner
+        state.banner = banners.Banner:new(nil)
+        state.banner:push_transform(banners.base_transform)
+        histories[state.player] = state.banner
+    end
+    state.current_color = state.banner.color
     state:size(20, 10)
     state:image(3, 0.4, 4, 2, "banner_preview", nil)
     state:image(2.4, 0.8, 0.7, 0.7, "color_indicator", state.current_color)
@@ -96,6 +105,7 @@ banners.creation_form_func = function(state)
         b:click(function(self, state2)
             state2.current_color = "bg_" .. self.name .. ".png"
             state2:get("color_indicator"):setImage(state2.current_color)
+            state2.banner.color = state2.current_color
             -- todo: update masks or something
         end)
         x = x + 1
@@ -134,7 +144,7 @@ banners.creation_form = smartfs.create("banners:banner_creation",
 banners.Banner = {}
 
 function banners.Banner:new(banner)
-    banner = banner or { transforms = {} }
+    banner = banner or { color = "bg_black.png", transforms = {} }
     setmetatable(banner, self)
     self.__index = self
     return banner
@@ -260,6 +270,10 @@ core.register_entity("banners:banner_ent", {
     },
     on_activate = banners.banner_on_activate,
 })
+
+core.register_on_leaveplayer(function(player)
+    histories[player:get_player_name()] = nil
+end)
 
 if core.get_modpath("factions") then
     dofile(MP .. "factions.lua")
