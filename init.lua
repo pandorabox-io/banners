@@ -29,6 +29,16 @@ banners.masks = {
     "star_chevron", "checkered_8_4", "checkered_16_8"
 }
 
+-- The amount of transformations needs to be capped somewhere
+-- to avoid crashing server.
+-- It doesn't make sense to have any one mask multiple times
+-- but users normally don't follow strict logic when being
+-- creative, so we give them plenty of space to work with.
+-- A better approach would be to strip duplicates and to
+-- drop all previous masks if a full background is dropped
+-- on top of other masks.
+banners.max_transformations = #banners.masks * #banners.masks
+
 banners.colors = {
     "black", "cyan", "green", "white",
     "blue", "darkblue", "red", "yellow",
@@ -134,6 +144,9 @@ function banners.Banner:new(banner)
 end
 function banners.Banner.push_transform(self, transform)
     table.insert(self.transforms, transform)
+    if #self.transforms > banners.max_transformations then
+        table.remove(self.transforms, 1)
+    end
 end
 function banners.Banner.pop_transform(self)
     table.remove(self.transforms)
