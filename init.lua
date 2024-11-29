@@ -97,6 +97,7 @@ function banners.creation_form_func(state)
         state.banner:push_transform(banners.base_transform)
         histories[state.player] = state.banner
     end
+    state.banner:read_item(state.player)
     state.current_color = state.banner.color
     state:size(20, 10)
     state:image(3, 0.4, 4, 2, "banner_preview", nil)
@@ -233,6 +234,22 @@ function banners.Banner:get_transform_string()
     return banners.transform_table_to_string(self.transforms)
 end
 
+function banners.Banner:read_item(player_name)
+    local player = core.get_player_by_name(player_name)
+    local item = player:get_wielded_item()
+    if "banners:" ~= item:get_name():sub(1, 8) then return end
+
+    local parts, mask, texture
+    local transforms = banners.transform_string_to_table(
+        item:get_meta():get_string(""))
+    local total = #transforms
+    if 0 == total then return end
+
+    local i = 1
+    repeat
+        self:push_transform(transforms[i])
+        i = i + 1
+    until i > total
 end
 
 -- helper function for determining the flag's direction
