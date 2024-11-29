@@ -2,7 +2,7 @@ local MP = core.get_modpath("banners") .. "/"
 dofile(MP .. "smartfs.lua")
 
 banners = {
-    version = 20241128.1533
+    version = 20241129.1012
 }
 
 banners.masks = {
