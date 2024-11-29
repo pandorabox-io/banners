@@ -47,6 +47,25 @@ banners.colors = {
     "brown", "darkbrown"
 }
 
+local valid_masks = {}
+local valid_colors = {}
+do
+    local i, s
+    i = #banners.masks
+    repeat
+        s = banners.masks[i]
+        valid_masks[s .. ".png"] = true
+        i = i - 1
+    until i == 0
+
+    i = #banners.colors
+    repeat
+        s = banners.colors[i]
+        valid_colors["bg_" .. s .. ".png"] = true
+        i = i - 1
+    until i == 0
+end
+
 banners.base_transform = {
     texture = "bg_white.png",
     mask = "mask_background.png"
@@ -144,7 +163,23 @@ end
 banners.creation_form = smartfs.create("banners:banner_creation",
     banners.creation_form_func)
 
+function banners.transform_string_to_table(transform_string)
+p('transform_string_to_table')
+    local transforms = {}
+    for part in transform_string:gmatch("%(([^%)]+)%)") do
+        parts = part:split("^[")
+        if 3 == #parts then
+            texture = parts[1]
+            mask = parts[2]:sub(6)
+            if valid_masks[mask] and valid_colors[texture] then
+                table.insert(transforms, {
+                    texture = texture,
+                    mask = mask
+                })
+            end
+        end
     end
+    return transforms
 end
 
 function banners.transform_table_to_string(transforms)
