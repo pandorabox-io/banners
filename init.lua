@@ -284,7 +284,9 @@ end
 -- (pos, player, itemstack, pointed_thing)
 function banners.banner_after_place(pos, _, itemstack, pointed_thing)
     core.get_node(pos).param2 = banners.determine_flag_direction(pos, pointed_thing)
-    core.get_meta(pos):set_string("banner", itemstack:get_meta():get_string(""))
+    local meta = core.get_meta(pos)
+    meta:set_string("banner", itemstack:get_meta():get_string(""))
+    meta:set_float("version", banners.version)
     core.add_entity(pos, "banners:banner_ent")
 end
 
@@ -292,7 +294,15 @@ end
 
 function banners:banner_on_activate()
     local pos = self.object:get_pos()
-    local banner = core.get_meta(pos):get_string("banner")
+    local meta = core.get_meta(pos)
+    local banner = meta:get_string("banner")
+    -- cleanup meta of old banners
+    if meta:get_float("version") < 20241122 then
+        meta:set_float("version", banners.version)
+        banner = banners.transform_table_to_string(
+            banners.transform_string_to_table(banner))
+        meta:set_string("banner", banner)
+    end
     local banner_face = core.get_node(pos).param2
     local yaw = 0.
     if banner_face == 2 then
