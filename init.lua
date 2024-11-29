@@ -261,9 +261,7 @@ banners.banner_on_activate = function(self)
         yaw = 4.71238898038469 -- 3 * pi / 2
     end
     self.object:set_yaw(yaw)
-    if banner then
-        set_banner_texture(self.object, banner)
-    end
+    set_banner_texture(self.object, banner)
 end
 
 core.register_entity("banners:banner_ent", {
