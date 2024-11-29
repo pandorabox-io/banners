@@ -241,10 +241,6 @@ function banners.banner_after_place(pos, _, itemstack, pointed_thing)
 end
 
 -- banner entity
-local set_banner_texture = function(obj, texture)
-    obj:set_properties({ textures = { "banner_uv_text.png^" .. texture } })
-end
-
 
 function banners:banner_on_activate()
     local pos = self.object:get_pos()
@@ -261,7 +257,9 @@ function banners:banner_on_activate()
         yaw = 4.71238898038469 -- 3 * pi / 2
     end
     self.object:set_yaw(yaw)
-    set_banner_texture(self.object, banner)
+    self.object:set_properties({
+        textures = { "banner_uv_text.png^" .. banner }
+    })
 end
 
 core.register_entity("banners:banner_ent", {
