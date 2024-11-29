@@ -1,6 +1,9 @@
-dofile(minetest.get_modpath("banners").."/smartfs.lua")
+local MP = core.get_modpath("banners") .. "/"
+dofile(MP .. "smartfs.lua")
 
-banners = {}
+banners = {
+    version = 20241128.1533
+}
 
 banners.masks = {
     "bend_left", "bend_left_outline",
@@ -28,6 +31,15 @@ banners.masks = {
     "star_chevron", "checkered_8_4", "checkered_16_8"
 }
 
+-- It is now unlikely for the server to crash from too long
+-- history since we now trim out garbage when converting to
+-- metadata. This limit is now just to avoid run-time
+-- memory bloat.
+banners.max_undo_levels = 256
+
+-- cache of player histories
+local histories = {}
+
 banners.colors = {
     "black", "cyan", "green", "white",
     "blue", "darkblue", "red", "yellow",
@@ -35,58 +47,71 @@ banners.colors = {
     "brown", "darkbrown"
 }
 
-banners.base_transform = ({texture = "bg_white.png",
-    mask="mask_background.png"})
+banners.base_transform = {
+    texture = "bg_white.png",
+    mask = "mask_background.png"
+}
 
 banners.creation_form_func = function(state)
     -- helper functions
-    state.update_player_inv = function(self)
-        local player = minetest.get_player_by_name(self.player)
+    state.update_player_inv = function(self, transform_string)
+        local player = core.get_player_by_name(self.player)
         local newbanner = player:get_wielded_item()
-        newbanner:get_meta():set_string("", state.banner:get_transform_string())
+        newbanner:get_meta():set_string("", transform_string)
         player:set_wielded_item(newbanner)
     end
-    state.update_preview = function(self)
-        self:get("banner_preview"):setImage(self.banner:get_transform_string())
+    state.update_preview = function(self, transform_string)
+        self:get("banner_preview"):setImage(transform_string)
         self:get("color_indicator"):setImage(self.current_color)
     end
-    state.update_all = function(self)
-        self:update_preview()
-        self:update_player_inv()
+    state.update_preview_inv = function(self)
+        local transform_string = self.banner:get_transform_string()
+        self:update_preview(transform_string)
+        self:update_player_inv(transform_string)
     end
-    -- initialize with empty banner
-    state.banner = banners.Banner:new(nil)
-    state.banner:push_transform(banners.base_transform)
-    state.current_color = "bg_white.png"
-    state:size(20,10)
+    if histories[state.player] then
+        -- initialize with saved history
+        state.banner = histories[state.player]
+    else
+        -- initialize with empty banner
+        state.banner = banners.Banner:new(nil)
+        state.banner:push_transform(banners.base_transform)
+        histories[state.player] = state.banner
+    end
+    state.current_color = state.banner.color
+    state:size(20, 10)
     state:image(3, 0.4, 4, 2, "banner_preview", nil)
     state:image(2.4, 0.8, 0.7, 0.7, "color_indicator", state.current_color)
-    state:update_all()
+    state:update_preview_inv()
     -- color indicator
     -- undo button
-    state:button(0.5, 0.3, 2, 1, "undo", "Undo"):click(function(self, state)
-            if #state.banner.transforms > 1 then
-                state.banner:pop_transform()
-                state:update_all()
-            end
-        end)
+    state:button(0.5, 0.3, 2, 1, "undo", "Undo"):click(function(_, state2)
+        if #state2.banner.transforms > 1 then
+            state2.banner:pop_transform()
+            state2:update_preview_inv()
+        end
+    end)
     -- delete button
-    state:button(0.5, 1.3, 2, 1, "delete", "Delete"):click(function(self, state)
-            state.banner.transforms = {banners.base_transform}
-            state:update_all()
-        end)
+    state:button(0.5, 1.3, 2, 1, "delete", "Delete"):click(function(_, state2)
+        state2.banner.transforms = { banners.base_transform }
+        state2:update_preview_inv()
+    end)
     -- add banners colors
     local x = 7
     local y = .3
-    for i in ipairs(banners.colors) do 
-        local b = state:button(x, y, 1, 1, banners.colors[i], "")
-        b:setImage("bg_"..banners.colors[i]..".png")
-        b:click(function(self, state)
-                    state.current_color = "bg_"..self.name..".png"
-                    state:update_preview()
-                    -- todo: update masks or something
-                end
-            )
+    for _, color in ipairs(banners.colors) do
+        local b = state:button(x, y, 1, 1, color, "")
+        b:setImage("bg_" .. color .. ".png")
+        b:click(function(self, state2)
+            state2.current_color = "bg_" .. self.name .. ".png"
+            state2:get("color_indicator"):setImage(state2.current_color)
+            state2.banner.color = state2.current_color
+            -- update masks
+            for _, mask in ipairs(banners.masks) do
+                state2:get(mask):setImage("(" .. state2.current_color
+                    .. "^[mask:" .. mask .. ".png^[makealpha:0,0,0)")
+            end
+        end)
         x = x + 1
         if x > 19 then
             y = y + 1
@@ -94,16 +119,19 @@ banners.creation_form_func = function(state)
         end
     end
     -- add banners buttons
-    local x = 1
-    local y = 3
-    for i in ipairs(banners.masks) do
-        local b = state:button(x, y, 2, 1, banners.masks[i], "")
-        b:setImage(banners.masks[i]..".png")
-        b:click(function(self, state)
-                    state.banner:push_transform({texture=state.current_color, mask=self.name..".png"})
-                    state:update_all()
-                end
-        )
+    x = 1
+    y = 3
+    for _, mask in ipairs(banners.masks) do
+        local b = state:button(x, y, 2, 1, mask, "")
+        b:setImage("(" .. state.current_color
+            .. "^[mask:" .. mask .. ".png^[makealpha:0,0,0)")
+        b:click(function(self, state2)
+            state2.banner:push_transform({
+                texture = state2.current_color,
+                mask = self.name .. ".png"
+            })
+            state2:update_preview_inv()
+        end)
         x = x + 2
         if x > 17.5 then
             y = y + 1
@@ -114,63 +142,90 @@ banners.creation_form_func = function(state)
 end
 
 banners.creation_form = smartfs.create("banners:banner_creation",
-    banners.creation_form_func);
+    banners.creation_form_func)
 
 
 -- banner definition
-banners.Banner = {
-    transforms = {}
-}
+banners.Banner = {}
+
 function banners.Banner:new(banner)
-    banner = banner or {}
+    banner = banner or { color = "bg_black.png", transforms = {} }
     setmetatable(banner, self)
     self.__index = self
     return banner
 end
 function banners.Banner.push_transform(self, transform)
     table.insert(self.transforms, transform)
+    if #self.transforms > banners.max_undo_levels then
+        table.remove(self.transforms, 1)
+    end
 end
 function banners.Banner.pop_transform(self)
     table.remove(self.transforms)
 end
 function banners.Banner.get_transform_string(self)
     local final = {}
-    for i in ipairs(self.transforms) do
-        table.insert(final, "("..self.transforms[i].texture.."^[mask:"..self.transforms[i].mask.."^[makealpha:0,0,0)")
-    end
+    local used = {}
+    local transform
+    -- work backwards to keep resulting data small
+    local i = #self.transforms
+    repeat
+        transform = self.transforms[i]
+        -- same mask can be trimmed out only using most recent
+        if not used[transform.mask] then
+            used[transform.mask] = true
+            table.insert(final, 1, "(" .. transform.texture
+                .. "^[mask:" .. transform.mask .. "^[makealpha:0,0,0)")
+            -- anything before a background is fully covered
+            if "mask_background.png" == transform.mask then
+                break
+            end
+        end
+        i = i - 1
+    until i == 0
     local ret = table.concat(final, "^")
     return ret
 end
 
 -- helper function for determining the flag's direction
-banners.determine_flag_direction = function(pos, pointed_thing)
+-- (pos, pointed_thing)
+banners.determine_flag_direction = function(_, pointed_thing)
     local above = pointed_thing.above
     local under = pointed_thing.under
-    local dir = {x = under.x - above.x,
-                 y = under.y - above.y,
-                 z = under.z - above.z}
-    return minetest.dir_to_wallmounted(dir)
+    local dir = {
+        x = under.x - above.x,
+        y = under.y - above.y,
+        z = under.z - above.z
+    }
+    return core.dir_to_wallmounted(dir)
 end
 
-banners.banner_on_use = function(itemstack, player, pointed_thing)
+-- (itemstack, player, pointed_thing)
+banners.banner_on_use = function(_, player)
     if player.is_player then
         banners.creation_form:show(player:get_player_name())
     end
 end
 
 banners.banner_on_dig = function(pos, node, player)
-    if not player or minetest.is_protected(pos, player:get_player_name()) then
+    if not player or core.is_protected(pos, player:get_player_name()) then
 		return
 	end
-    local meta = minetest.get_meta(pos)
+    local meta = core.get_meta(pos)
     local inventory = player:get_inventory()
-    inventory:add_item("main", {name=node.name, count=1, wear=0, metadata=meta:get_string("banner")})
-    minetest.remove_node(pos)
+    inventory:add_item("main", {
+        name = node.name,
+        count = 1,
+        wear = 0,
+        metadata = meta:get_string("banner")
+    })
+    core.remove_node(pos)
 end
 
-banners.banner_on_destruct = function(pos, node, player)
-    local objects = minetest.get_objects_inside_radius(pos, 0.5)
-    for _,v in ipairs(objects) do
+-- (pos, node, player)
+banners.banner_on_destruct = function(pos)
+    local objects = core.get_objects_inside_radius(pos, 0.5)
+    for _, v in ipairs(objects) do
         local e = v:get_luaentity()
         if e and e.name == "banners:banner_ent" then
             v:remove()
@@ -178,23 +233,23 @@ banners.banner_on_destruct = function(pos, node, player)
     end
 end
 
-banners.banner_after_place = function (pos, player, itemstack, pointed_thing)
-    minetest.get_node(pos).param2 = banners.determine_flag_direction(pos, pointed_thing)
-    minetest.get_meta(pos):set_string("banner", itemstack:get_meta():get_string(""))
-    minetest.add_entity(pos, "banners:banner_ent")
+-- (pos, player, itemstack, pointed_thing)
+banners.banner_after_place = function(pos, _, itemstack, pointed_thing)
+    core.get_node(pos).param2 = banners.determine_flag_direction(pos, pointed_thing)
+    core.get_meta(pos):set_string("banner", itemstack:get_meta():get_string(""))
+    core.add_entity(pos, "banners:banner_ent")
 end
 
 -- banner entity
-local set_banner_texture
-set_banner_texture = function (obj, texture)
-    obj:set_properties({textures={"banner_uv_text.png^"..texture}})
+local set_banner_texture = function(obj, texture)
+    obj:set_properties({ textures = { "banner_uv_text.png^" .. texture } })
 end
 
 
 banners.banner_on_activate = function(self)
     local pos = self.object:get_pos()
-    local banner = minetest.get_meta(pos):get_string("banner")
-    local banner_face = minetest.get_node(pos).param2
+    local banner = core.get_meta(pos):get_string("banner")
+    local banner_face = core.get_node(pos).param2
     local yaw = 0.
     if banner_face == 2 then
         yaw = 0.
@@ -211,21 +266,25 @@ banners.banner_on_activate = function(self)
     end
 end
 
-minetest.register_entity("banners:banner_ent", {
+core.register_entity("banners:banner_ent", {
     initial_properties = {
-        collisionbox = {0,0,0,0,0,0},
+        collisionbox = { 0, 0, 0, 0, 0, 0 },
         visual = "mesh",
-        textures = {"banner_uv_text"},
+        textures = { "banner_uv_text" },
         mesh = "banner_pole.x",
     },
     on_activate = banners.banner_on_activate,
 })
 
-if minetest.get_modpath("factions") then
-    dofile(minetest.get_modpath("banners").."/factions.lua")
+core.register_on_leaveplayer(function(player)
+    histories[player:get_player_name()] = nil
+end)
+
+if core.get_modpath("factions") then
+    dofile(MP .. "factions.lua")
 end
 
-dofile(minetest.get_modpath("banners").."/items.lua")
-dofile(minetest.get_modpath("banners").."/nodes.lua")
-dofile(minetest.get_modpath("banners").."/crafts.lua")
+dofile(MP .. "items.lua")
+dofile(MP .. "nodes.lua")
+dofile(MP .. "crafts.lua")
 
