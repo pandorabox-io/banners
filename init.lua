@@ -165,7 +165,7 @@ banners.creation_form = smartfs.create("banners:banner_creation",
     banners.creation_form_func)
 
 function banners.transform_string_to_table(transform_string)
-p('transform_string_to_table')
+    local mask, parts, texture
     local transforms = {}
     for part in transform_string:gmatch("%(([^%)]+)%)") do
         parts = part:split("^[")
@@ -184,13 +184,13 @@ p('transform_string_to_table')
 end
 
 function banners.transform_table_to_string(transforms)
+    local i = #transforms
+    if 0 == i then return "" end
+
     local final = {}
     local used = {}
     local transform
     -- work backwards to keep resulting data small
-    local i = #transforms
-    if 0 == i then return "" end
-
     repeat
         transform = transforms[i]
         -- duplicate mask can be trimmed out only use most recent
@@ -213,7 +213,7 @@ banners.Banner = {}
 
 function banners.Banner:new(banner)
 p('new')
-    banner = banner or { color = "bg_pink.png", transforms = {} }
+    banner = banner or { color = "bg_black.png", transforms = {} }
     setmetatable(banner, self)
     self.__index = self
     return banner
@@ -239,7 +239,6 @@ function banners.Banner:read_item(player_name)
     local item = player:get_wielded_item()
     if "banners:" ~= item:get_name():sub(1, 8) then return end
 
-    local parts, mask, texture
     local transforms = banners.transform_string_to_table(
         item:get_meta():get_string(""))
     local total = #transforms
