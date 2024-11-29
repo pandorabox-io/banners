@@ -272,10 +272,6 @@ core.register_entity("banners:banner_ent", {
     on_activate = banners.banner_on_activate,
 })
 
-core.register_on_leaveplayer(function(player)
-    histories[player:get_player_name()] = nil
-end)
-
 if core.get_modpath("factions") then
     dofile(MP .. "factions.lua")
 end
