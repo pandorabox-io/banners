@@ -212,7 +212,6 @@ end
 banners.Banner = {}
 
 function banners.Banner:new(banner)
-p('new')
     banner = banner or { color = "bg_black.png", transforms = {} }
     setmetatable(banner, self)
     self.__index = self
