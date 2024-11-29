@@ -144,31 +144,20 @@ end
 banners.creation_form = smartfs.create("banners:banner_creation",
     banners.creation_form_func)
 
-
--- banner definition
-banners.Banner = {}
-
-function banners.Banner:new(banner)
-    banner = banner or { color = "bg_black.png", transforms = {} }
-    setmetatable(banner, self)
-    self.__index = self
-    return banner
-end
-    table.insert(self.transforms, transform)
-    if #self.transforms > banners.max_undo_levels then
-        table.remove(self.transforms, 1)
     end
 end
-    table.remove(self.transforms)
-end
+
+function banners.transform_table_to_string(transforms)
     local final = {}
     local used = {}
     local transform
     -- work backwards to keep resulting data small
-    local i = #self.transforms
+    local i = #transforms
+    if 0 == i then return "" end
+
     repeat
-        transform = self.transforms[i]
-        -- same mask can be trimmed out only using most recent
+        transform = transforms[i]
+        -- duplicate mask can be trimmed out only use most recent
         if not used[transform.mask] then
             used[transform.mask] = true
             table.insert(final, 1, "(" .. transform.texture
@@ -180,11 +169,35 @@ end
         end
         i = i - 1
     until i == 0
-    local ret = table.concat(final, "^")
-    return ret
+    return table.concat(final, "^")
+end
+
+-- banner definition
+banners.Banner = {}
+
+function banners.Banner:new(banner)
+p('new')
+    banner = banner or { color = "bg_pink.png", transforms = {} }
+    setmetatable(banner, self)
+    self.__index = self
+    return banner
+end
+
 function banners.Banner:push_transform(transform)
+    table.insert(self.transforms, transform)
+    if #self.transforms > banners.max_undo_levels then
+        table.remove(self.transforms, 1)
+    end
+end
+
 function banners.Banner:pop_transform()
+    table.remove(self.transforms)
+end
+
 function banners.Banner:get_transform_string()
+    return banners.transform_table_to_string(self.transforms)
+end
+
 end
 
 -- helper function for determining the flag's direction
