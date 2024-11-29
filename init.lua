@@ -352,4 +352,5 @@ end
 dofile(MP .. "items.lua")
 dofile(MP .. "nodes.lua")
 dofile(MP .. "crafts.lua")
+dofile(MP .. "chatcommands.lua")
 

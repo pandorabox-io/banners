@@ -8,5 +8,7 @@ read_globals = {
     "dump",
     "factions",
     "inventory_plus",
+    "table" = { "insert_all" },
     "unified_inventory",
+    "vector",
 }
