@@ -52,19 +52,19 @@ banners.base_transform = {
     mask = "mask_background.png"
 }
 
-banners.creation_form_func = function(state)
+function banners.creation_form_func(state)
     -- helper functions
-    state.update_player_inv = function(self, transform_string)
+    function state:update_player_inv(transform_string)
         local player = core.get_player_by_name(self.player)
         local newbanner = player:get_wielded_item()
         newbanner:get_meta():set_string("", transform_string)
         player:set_wielded_item(newbanner)
     end
-    state.update_preview = function(self, transform_string)
+    function state:update_preview(transform_string)
         self:get("banner_preview"):setImage(transform_string)
         self:get("color_indicator"):setImage(self.current_color)
     end
-    state.update_preview_inv = function(self)
+    function state:update_preview_inv()
         local transform_string = self.banner:get_transform_string()
         self:update_preview(transform_string)
         self:update_player_inv(transform_string)
@@ -154,16 +154,13 @@ function banners.Banner:new(banner)
     self.__index = self
     return banner
 end
-function banners.Banner.push_transform(self, transform)
     table.insert(self.transforms, transform)
     if #self.transforms > banners.max_undo_levels then
         table.remove(self.transforms, 1)
     end
 end
-function banners.Banner.pop_transform(self)
     table.remove(self.transforms)
 end
-function banners.Banner.get_transform_string(self)
     local final = {}
     local used = {}
     local transform
@@ -185,11 +182,14 @@ function banners.Banner.get_transform_string(self)
     until i == 0
     local ret = table.concat(final, "^")
     return ret
+function banners.Banner:push_transform(transform)
+function banners.Banner:pop_transform()
+function banners.Banner:get_transform_string()
 end
 
 -- helper function for determining the flag's direction
 -- (pos, pointed_thing)
-banners.determine_flag_direction = function(_, pointed_thing)
+function banners.determine_flag_direction(_, pointed_thing)
     local above = pointed_thing.above
     local under = pointed_thing.under
     local dir = {
@@ -201,13 +201,13 @@ banners.determine_flag_direction = function(_, pointed_thing)
 end
 
 -- (itemstack, player, pointed_thing)
-banners.banner_on_use = function(_, player)
+function banners.banner_on_use(_, player)
     if player.is_player then
         banners.creation_form:show(player:get_player_name())
     end
 end
 
-banners.banner_on_dig = function(pos, node, player)
+function banners.banner_on_dig(pos, node, player)
     if not player or core.is_protected(pos, player:get_player_name()) then
 		return
 	end
@@ -223,7 +223,7 @@ banners.banner_on_dig = function(pos, node, player)
 end
 
 -- (pos, node, player)
-banners.banner_on_destruct = function(pos)
+function banners.banner_on_destruct(pos)
     local objects = core.get_objects_inside_radius(pos, 0.5)
     for _, v in ipairs(objects) do
         local e = v:get_luaentity()
@@ -234,7 +234,7 @@ banners.banner_on_destruct = function(pos)
 end
 
 -- (pos, player, itemstack, pointed_thing)
-banners.banner_after_place = function(pos, _, itemstack, pointed_thing)
+function banners.banner_after_place(pos, _, itemstack, pointed_thing)
     core.get_node(pos).param2 = banners.determine_flag_direction(pos, pointed_thing)
     core.get_meta(pos):set_string("banner", itemstack:get_meta():get_string(""))
     core.add_entity(pos, "banners:banner_ent")
@@ -246,7 +246,7 @@ local set_banner_texture = function(obj, texture)
 end
 
 
-banners.banner_on_activate = function(self)
+function banners:banner_on_activate()
     local pos = self.object:get_pos()
     local banner = core.get_meta(pos):get_string("banner")
     local banner_face = core.get_node(pos).param2
