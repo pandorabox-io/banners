@@ -143,12 +143,8 @@ core.register_node("banners:power_banner", {
     stack_max = 1,
     paramtype = "light",
     paramtype2 = "facedir",
-    after_place_node = function (pos, player, itemstack, pointed_thing)
-        banners.after_powerbanner_placed(pos, player, itemstack, pointed_thing)
-    end,
-    on_destruct = function(pos)
-        banners.banner_on_destruct(pos)
-    end,
+    after_place_node = banners.after_powerbanner_placed,
+    on_destruct = banners.banner_on_destruct,
     on_dig = function(pos, n, p)
         if core.is_protected(pos, p:get_player_name()) then
             return
@@ -163,6 +159,7 @@ core.register_node("banners:power_banner", {
         end
         banners.banner_on_dig(pos, n, p)
     end,
+    on_movenode = banners.banner_on_movenode,
 })
 
 core.register_node("banners:death_banner", {
@@ -176,12 +173,8 @@ core.register_node("banners:death_banner", {
     stack_max = 1,
     paramtype = "light",
     paramtype2 = "facedir",
-    after_place_node = function (pos, player, itemstack, pointed_thing)
-        banners.after_deathbanner_placed(pos, player, itemstack, pointed_thing)
-    end,
-    on_destruct = function(pos)
-        banners.banner_on_destruct(pos)
-    end,
+    after_place_node = banners.after_deathbanner_placed,
+    on_destruct = banners.banner_on_destruct,
     -- (pos, node, player)
     on_dig = function(pos, _, player)
         if core.is_protected(pos, player:get_player_name()) then
@@ -198,6 +191,7 @@ core.register_node("banners:death_banner", {
         end
         core.remove_node(pos)
     end,
+    on_movenode = banners.banner_on_movenode,
 })
 
 -- (pos, player, itemstack, pointed_thing)
