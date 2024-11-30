@@ -14,6 +14,7 @@ core.register_node("banners:wooden_banner", {
     on_destruct = banners.banner_on_destruct,
     on_use = banners.banner_on_use,
     on_dig = banners.banner_on_dig,
+    on_movenode = banners.banner_on_movenode,
 })
 
 -- steel banner
@@ -32,5 +33,6 @@ core.register_node("banners:steel_banner", {
     on_destruct = banners.banner_on_destruct,
     on_use = banners.banner_on_use,
     on_dig = banners.banner_on_dig,
+    on_movenode = banners.banner_on_movenode,
 })
 

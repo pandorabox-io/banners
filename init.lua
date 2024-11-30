@@ -2,7 +2,7 @@ local MP = core.get_modpath("banners") .. "/"
 dofile(MP .. "smartfs.lua")
 
 banners = {
-    version = 20241129.1232
+    version = 20241130.1920
 }
 
 banners.masks = {
@@ -303,6 +303,12 @@ function banners.banner_after_place(pos, _, itemstack, pointed_thing)
     meta:set_string("banner", itemstack:get_meta():get_string(""))
     meta:set_float("version", banners.version)
     core.add_entity(pos, "banners:banner_ent")
+end
+
+-- [jumpdrive] compat
+-- (from_pos, to_pos, additional_info)
+function banners.banner_on_movenode(_, to_pos)
+    core.add_entity(to_pos, "banners:banner_ent")
 end
 
 -- banner entity
