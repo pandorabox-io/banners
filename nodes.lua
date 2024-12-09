@@ -10,18 +10,11 @@ core.register_node("banners:wooden_banner", {
     stack_max = 1,
     paramtype = "light",
     paramtype2 = "facedir",
-    after_place_node = function (pos, player, itemstack, pointed_thing)
-        banners.banner_after_place(pos, player, itemstack, pointed_thing)
-      end,
-    on_destruct = function(pos)
-        banners.banner_on_destruct(pos)
-    end,
-    on_use = function(i, p, pt)
-        banners.banner_on_use(i, p, pt)
-    end,
-    on_dig = function(pos, n, p)
-        banners.banner_on_dig(pos, n, p)
-    end
+    after_place_node = banners.banner_after_place,
+    on_destruct = banners.banner_on_destruct,
+    on_use = banners.banner_on_use,
+    on_dig = banners.banner_on_dig,
+    on_movenode = banners.banner_on_movenode,
 })
 
 -- steel banner
@@ -36,18 +29,10 @@ core.register_node("banners:steel_banner", {
     stack_max = 1,
     paramtype = "light",
     paramtype2 = "facedir",
-    after_place_node = function (pos, player, itemstack, pointed_thing)
-        banners.banner_after_place(pos, player, itemstack, pointed_thing)
-      end,
-    on_destruct = function(pos)
-        banners.banner_on_destruct(pos)
-    end,
-    on_use = function(i, p, pt)
-        banners.banner_on_use(i, p, pt)
-    end,
-    on_dig = function(pos, n, p)
-        banners.banner_on_dig(pos, n, p)
-    end
-
+    after_place_node = banners.banner_after_place,
+    on_destruct = banners.banner_on_destruct,
+    on_use = banners.banner_on_use,
+    on_dig = banners.banner_on_dig,
+    on_movenode = banners.banner_on_movenode,
 })
 

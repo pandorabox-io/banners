@@ -2,7 +2,7 @@ local MP = core.get_modpath("banners") .. "/"
 dofile(MP .. "smartfs.lua")
 
 banners = {
-    version = 20241128.1533
+    version = 20241130.1920
 }
 
 banners.masks = {
@@ -47,24 +47,43 @@ banners.colors = {
     "brown", "darkbrown"
 }
 
+local valid_masks = {}
+local valid_colors = {}
+do
+    local i, s
+    i = #banners.masks
+    repeat
+        s = banners.masks[i]
+        valid_masks[s .. ".png"] = true
+        i = i - 1
+    until i == 0
+
+    i = #banners.colors
+    repeat
+        s = banners.colors[i]
+        valid_colors["bg_" .. s .. ".png"] = true
+        i = i - 1
+    until i == 0
+end
+
 banners.base_transform = {
     texture = "bg_white.png",
     mask = "mask_background.png"
 }
 
-banners.creation_form_func = function(state)
+function banners.creation_form_func(state)
     -- helper functions
-    state.update_player_inv = function(self, transform_string)
+    function state:update_player_inv(transform_string)
         local player = core.get_player_by_name(self.player)
         local newbanner = player:get_wielded_item()
         newbanner:get_meta():set_string("", transform_string)
         player:set_wielded_item(newbanner)
     end
-    state.update_preview = function(self, transform_string)
+    function state:update_preview(transform_string)
         self:get("banner_preview"):setImage(transform_string)
         self:get("color_indicator"):setImage(self.current_color)
     end
-    state.update_preview_inv = function(self)
+    function state:update_preview_inv()
         local transform_string = self.banner:get_transform_string()
         self:update_preview(transform_string)
         self:update_player_inv(transform_string)
@@ -78,6 +97,7 @@ banners.creation_form_func = function(state)
         state.banner:push_transform(banners.base_transform)
         histories[state.player] = state.banner
     end
+    state.banner:read_item(state.player)
     state.current_color = state.banner.color
     state:size(20, 10)
     state:image(3, 0.4, 4, 2, "banner_preview", nil)
@@ -144,34 +164,36 @@ end
 banners.creation_form = smartfs.create("banners:banner_creation",
     banners.creation_form_func)
 
-
--- banner definition
-banners.Banner = {}
-
-function banners.Banner:new(banner)
-    banner = banner or { color = "bg_black.png", transforms = {} }
-    setmetatable(banner, self)
-    self.__index = self
-    return banner
-end
-function banners.Banner.push_transform(self, transform)
-    table.insert(self.transforms, transform)
-    if #self.transforms > banners.max_undo_levels then
-        table.remove(self.transforms, 1)
+function banners.transform_string_to_table(transform_string)
+    local mask, parts, texture
+    local transforms = {}
+    for part in transform_string:gmatch("%(([^%)]+)%)") do
+        parts = part:split("^[")
+        if 3 == #parts then
+            texture = parts[1]
+            mask = parts[2]:sub(6)
+            if valid_masks[mask] and valid_colors[texture] then
+                table.insert(transforms, {
+                    texture = texture,
+                    mask = mask
+                })
+            end
+        end
     end
+    return transforms
 end
-function banners.Banner.pop_transform(self)
-    table.remove(self.transforms)
-end
-function banners.Banner.get_transform_string(self)
+
+function banners.transform_table_to_string(transforms)
+    local i = #transforms
+    if 0 == i then return "" end
+
     local final = {}
     local used = {}
     local transform
     -- work backwards to keep resulting data small
-    local i = #self.transforms
     repeat
-        transform = self.transforms[i]
-        -- same mask can be trimmed out only using most recent
+        transform = transforms[i]
+        -- duplicate mask can be trimmed out only use most recent
         if not used[transform.mask] then
             used[transform.mask] = true
             table.insert(final, 1, "(" .. transform.texture
@@ -183,13 +205,54 @@ function banners.Banner.get_transform_string(self)
         end
         i = i - 1
     until i == 0
-    local ret = table.concat(final, "^")
-    return ret
+    return table.concat(final, "^")
+end
+
+-- banner definition
+banners.Banner = {}
+
+function banners.Banner:new(banner)
+    banner = banner or { color = "bg_black.png", transforms = {} }
+    setmetatable(banner, self)
+    self.__index = self
+    return banner
+end
+
+function banners.Banner:push_transform(transform)
+    table.insert(self.transforms, transform)
+    if #self.transforms > banners.max_undo_levels then
+        table.remove(self.transforms, 1)
+    end
+end
+
+function banners.Banner:pop_transform()
+    table.remove(self.transforms)
+end
+
+function banners.Banner:get_transform_string()
+    return banners.transform_table_to_string(self.transforms)
+end
+
+function banners.Banner:read_item(player_name)
+    local player = core.get_player_by_name(player_name)
+    local item = player:get_wielded_item()
+    if "banners:" ~= item:get_name():sub(1, 8) then return end
+
+    local transforms = banners.transform_string_to_table(
+        item:get_meta():get_string(""))
+    local total = #transforms
+    if 0 == total then return end
+
+    local i = 1
+    repeat
+        self:push_transform(transforms[i])
+        i = i + 1
+    until i > total
 end
 
 -- helper function for determining the flag's direction
 -- (pos, pointed_thing)
-banners.determine_flag_direction = function(_, pointed_thing)
+function banners.determine_flag_direction(_, pointed_thing)
     local above = pointed_thing.above
     local under = pointed_thing.under
     local dir = {
@@ -201,13 +264,13 @@ banners.determine_flag_direction = function(_, pointed_thing)
 end
 
 -- (itemstack, player, pointed_thing)
-banners.banner_on_use = function(_, player)
+function banners.banner_on_use(_, player)
     if player.is_player then
         banners.creation_form:show(player:get_player_name())
     end
 end
 
-banners.banner_on_dig = function(pos, node, player)
+function banners.banner_on_dig(pos, node, player)
     if not player or core.is_protected(pos, player:get_player_name()) then
 		return
 	end
@@ -223,7 +286,7 @@ banners.banner_on_dig = function(pos, node, player)
 end
 
 -- (pos, node, player)
-banners.banner_on_destruct = function(pos)
+function banners.banner_on_destruct(pos)
     local objects = core.get_objects_inside_radius(pos, 0.5)
     for _, v in ipairs(objects) do
         local e = v:get_luaentity()
@@ -234,21 +297,33 @@ banners.banner_on_destruct = function(pos)
 end
 
 -- (pos, player, itemstack, pointed_thing)
-banners.banner_after_place = function(pos, _, itemstack, pointed_thing)
+function banners.banner_after_place(pos, _, itemstack, pointed_thing)
     core.get_node(pos).param2 = banners.determine_flag_direction(pos, pointed_thing)
-    core.get_meta(pos):set_string("banner", itemstack:get_meta():get_string(""))
+    local meta = core.get_meta(pos)
+    meta:set_string("banner", itemstack:get_meta():get_string(""))
+    meta:set_float("version", banners.version)
     core.add_entity(pos, "banners:banner_ent")
 end
 
--- banner entity
-local set_banner_texture = function(obj, texture)
-    obj:set_properties({ textures = { "banner_uv_text.png^" .. texture } })
+-- [jumpdrive] compat
+-- (from_pos, to_pos, additional_info)
+function banners.banner_on_movenode(_, to_pos)
+    core.add_entity(to_pos, "banners:banner_ent")
 end
 
+-- banner entity
 
-banners.banner_on_activate = function(self)
+function banners:banner_on_activate()
     local pos = self.object:get_pos()
-    local banner = core.get_meta(pos):get_string("banner")
+    local meta = core.get_meta(pos)
+    local banner = meta:get_string("banner")
+    -- cleanup meta of old banners
+    if meta:get_float("version") < 20241122 then
+        meta:set_float("version", banners.version)
+        banner = banners.transform_table_to_string(
+            banners.transform_string_to_table(banner))
+        meta:set_string("banner", banner)
+    end
     local banner_face = core.get_node(pos).param2
     local yaw = 0.
     if banner_face == 2 then
@@ -261,9 +336,9 @@ banners.banner_on_activate = function(self)
         yaw = 4.71238898038469 -- 3 * pi / 2
     end
     self.object:set_yaw(yaw)
-    if banner then
-        set_banner_texture(self.object, banner)
-    end
+    self.object:set_properties({
+        textures = { "banner_uv_text.png^" .. banner }
+    })
 end
 
 core.register_entity("banners:banner_ent", {
@@ -276,10 +351,6 @@ core.register_entity("banners:banner_ent", {
     on_activate = banners.banner_on_activate,
 })
 
-core.register_on_leaveplayer(function(player)
-    histories[player:get_player_name()] = nil
-end)
-
 if core.get_modpath("factions") then
     dofile(MP .. "factions.lua")
 end
@@ -287,4 +358,5 @@ end
 dofile(MP .. "items.lua")
 dofile(MP .. "nodes.lua")
 dofile(MP .. "crafts.lua")
+dofile(MP .. "chatcommands.lua")
 
