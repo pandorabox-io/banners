@@ -100,8 +100,8 @@ function banners.creation_form_func(state)
     state.banner:read_item(state.player)
     state.current_color = state.banner.color
     state:size(20, 10)
-    state:image(3, 0.4, 4, 2, "banner_preview", nil)
-    state:image(2.4, 0.8, 0.7, 0.7, "color_indicator", state.current_color)
+    state:image(3.4, 0.4, 4, 2, "banner_preview", nil)
+    state:image(2.55, 0.95, 0.7, 0.7, "color_indicator", state.current_color)
     state:update_preview_inv()
     -- color indicator
     -- undo button
