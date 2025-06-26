@@ -134,7 +134,7 @@ core.register_craft({
 -- nodes
 core.register_node("banners:power_banner", {
     drawtype = "mesh",
-    mesh = "banner_support.x",
+    mesh = "banner_support.obj",
     tiles = { "gold_support.png" },
     description = "Power Banner",
     groups = { cracky = 3 },
@@ -164,7 +164,7 @@ core.register_node("banners:power_banner", {
 
 core.register_node("banners:death_banner", {
     drawtype = "mesh",
-    mesh = "banner_support.x",
+    mesh = "banner_support.obj",
     tiles = { "death_uv.png" },
     description = "Death Banner",
     groups = { cracky = 3 },

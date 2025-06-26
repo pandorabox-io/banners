@@ -1,7 +1,7 @@
 -- da wooden banner
 core.register_node("banners:wooden_banner", {
     drawtype = "mesh",
-    mesh = "banner_support.x",
+    mesh = "banner_support.obj",
     tiles = { "banner_support.png" },
     description = "Wooden banner",
     groups = { choppy = 2, dig_immediate = 2 },
@@ -20,7 +20,7 @@ core.register_node("banners:wooden_banner", {
 -- steel banner
 core.register_node("banners:steel_banner", {
     drawtype = "mesh",
-    mesh = "banner_support.x",
+    mesh = "banner_support.obj",
     tiles = { "steel_support.png" },
     description = "Steel banner",
     groups = { cracky = 2 },
