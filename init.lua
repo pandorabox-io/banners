@@ -346,7 +346,7 @@ core.register_entity("banners:banner_ent", {
         collisionbox = { 0, 0, 0, 0, 0, 0 },
         visual = "mesh",
         textures = { "banner_uv_text" },
-        mesh = "banner_pole.x",
+        mesh = "banner_pole.obj",
     },
     on_activate = banners.banner_on_activate,
 })
